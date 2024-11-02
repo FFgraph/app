@@ -1,0 +1,14 @@
+.DS_Store
+node_modules
+logs
+*.log
+pnpm-debug.log*
+node_modules
+dist
+dist-ssr
+*.local
+.vscode
+.idea
+.DS_Store
+target
+gen/schemas
