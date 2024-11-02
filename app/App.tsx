@@ -1,7 +1,12 @@
-import "./App.css";
+import NodeGraph from "./components/NodeGraph";
+import "virtual:uno.css";
 
 function App() {
-    return <p>Hello Tauri</p>;
+    return (
+        <div className="uno-h-screen uno-w-screen">
+            <NodeGraph />
+        </div>
+    );
 }
 
 export default App;
