@@ -1,5 +1,5 @@
 [package]
-name = "ffgraph"
+name = "FFgraph"
 version = "0.1.0"
 description = "FFgraph application"
 authors = ["Saurav Sharma <appdroiddeveloper@gmail.com>"]

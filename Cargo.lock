@@ -3,6 +3,14 @@
 version = 4
 
 [[package]]
+name = "FFgraph"
+version = "0.1.0"
+dependencies = [
+ "tauri",
+ "tauri-build",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -696,14 +704,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07c6f4c64c1d33a3111c4466f7365ebdcc37c5bd1ea0d62aae2e3d722aacbedb"
 dependencies = [
  "simd-adler32",
-]
-
-[[package]]
-name = "ffgraph"
-version = "0.1.0"
-dependencies = [
- "tauri",
- "tauri-build",
 ]
 
 [[package]]
