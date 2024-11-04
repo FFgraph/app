@@ -1,4 +1,10 @@
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() -> Result<(), tauri::Error> {
-    tauri::Builder::default().run(tauri::generate_context!())
-}
+//! Library for `FFgraph` application where all
+
+/// Module for command
+pub mod command;
+
+/// Module for error
+pub mod error;
+
+/// Module for menu
+pub mod menu;
