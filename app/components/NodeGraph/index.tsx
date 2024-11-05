@@ -1,18 +1,16 @@
 import {
     Background,
     Controls,
+    type Edge,
+    type Node,
     Panel,
     ReactFlow,
+    type ReactFlowInstance,
+    type ReactFlowJsonObject,
     ReactFlowProvider,
     useEdgesState,
     useNodesState,
     useReactFlow,
-} from "@xyflow/react";
-import type {
-    Edge,
-    Node,
-    ReactFlowInstance,
-    ReactFlowJsonObject,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { invoke } from "@tauri-apps/api/core";
@@ -20,11 +18,12 @@ import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useRef, useState } from "react";
-import Button from "./Button";
-import Dialog from "./Dialog";
+import Button from "../Button";
+import Dialog, { type DialogRef } from "../Dialog";
+import styles from "./styles.module.css";
 
 function Flow() {
-    const dialogRef = useRef<HTMLDialogElement>(null);
+    const dialogRef = useRef<DialogRef>(null);
     const [dialogText, setDialogText] = useState("");
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -117,13 +116,13 @@ function Flow() {
         if (flowInstance) {
             setDialogText(JSON.stringify(flowInstance.toObject()));
             if (dialogRef.current) {
-                dialogRef.current.showModal();
+                dialogRef.current.open();
             }
         }
     };
 
     return (
-        <div className="uno-h-100% uno-w-100%">
+        <div className={styles.topDiv}>
             <Dialog ref={dialogRef}>{dialogText}</Dialog>
             <ReactFlow
                 nodes={nodes}

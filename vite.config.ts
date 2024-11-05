@@ -1,11 +1,10 @@
 import React from "@vitejs/plugin-react";
-import UnoCSS from "unocss/vite";
 import { defineConfig } from "vite";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
-    plugins: [React(), UnoCSS()],
+    plugins: [React()],
     clearScreen: false,
     server: {
         port: 1420,
