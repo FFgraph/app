@@ -3,13 +3,13 @@ use tauri::menu::{
 };
 use tauri::{AppHandle, Emitter, Wry};
 
-use crate::error::Error;
+use crate::error::{Error, Message};
 
 /// Create app sub menu
 ///
 /// # Errors
 /// If app submenu is not created properly
-fn create_app_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Error> {
+fn create_app_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std::error::Error>> {
     let about_item = PredefinedMenuItem::about(handle, Some("About FFgraph"), None)?;
     let mut app_sub_menu_builder = SubmenuBuilder::new(handle, "FFgraph").item(&about_item);
 
@@ -45,7 +45,7 @@ fn create_app_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Error> {
 ///
 /// # Errors
 /// If file submenu is not created properly
-fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Error> {
+fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std::error::Error>> {
     let open_file_menu_item = MenuItem::with_id(
         handle,
         "open-file",
@@ -74,7 +74,7 @@ fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Error> {
 ///
 /// # Errors
 /// If menu creation fails
-pub fn create_menu(handle: &AppHandle) -> Result<Menu<Wry>, Error> {
+pub fn create_menu(handle: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::error::Error>> {
     let app_sub_menu = create_app_sub_menu(handle)?;
     let file_sub_menu = create_file_sub_menu(handle)?;
     let menu = MenuBuilder::new(handle)
@@ -90,9 +90,18 @@ pub fn create_menu(handle: &AppHandle) -> Result<Menu<Wry>, Error> {
 /// If menu event are not handled properly
 pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) -> Result<(), Error> {
     match event.id.as_ref() {
-        "open-file" => app.emit("open-file", ())?,
-        "save-graph" => app.emit("save-graph", ())?,
-        "save-as-graph" => app.emit("save-as-graph", ())?,
+        "open-file" => {
+            app.emit("open-file", ())
+                .message("failed to emit open file event")?;
+        }
+        "save-graph" => {
+            app.emit("save-graph", ())
+                .message("failed to emit save graph event")?;
+        }
+        "save-as-graph" => {
+            app.emit("save-as-graph", ())
+                .message("failed to emit save as graph event")?;
+        }
         _ => {}
     };
     Ok(())

@@ -2,10 +2,18 @@
     "name": "ffgraph",
     "version": "0.1.0",
     "description": "FFgraph application",
-    "maintainers": ["Saurav Sharma <appdroiddeveloper@gmail.com>"],
+    "maintainers": [
+        {
+            "name": "Saurav Sharma",
+            "email": "appdroiddeveloper@gmail.com"
+        }
+    ],
     "type": "module",
     "private": "true",
     "license": "GPL-3.0-only",
+    "engines": {
+        "node": "^22.11.0"
+    },
     "scripts": {
         "build": "tsc && vite build",
         "check": "biome check",

@@ -1,23 +1,49 @@
-/// Error enum for application
-#[derive(thiserror::Error, Debug)]
-#[non_exhaustive]
-pub enum Error {
-    /// std io error
-    #[error(transparent)]
-    StdIo(#[from] std::io::Error),
-    /// tauri error
-    #[error(transparent)]
-    Tauri(#[from] tauri::Error),
-    /// `tauri-plugin-dialog` error
-    #[error(transparent)]
-    TauriPluginDialog(#[from] tauri_plugin_dialog::Error),
+use serde::Serialize;
+
+/// Struct representing error
+#[derive(Serialize, Clone)]
+pub struct Error {
+    /// main error message
+    message: String,
+    /// error
+    errors: Vec<String>,
 }
 
-impl serde::Serialize for Error {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+fn get_errors<E>(error: E) -> Vec<String>
+where
+    E: std::error::Error,
+{
+    let mut errors = vec![error.to_string()];
+    if let Some(source) = error.source() {
+        errors.extend(get_errors(source));
+    }
+    errors
+}
+
+/// trait which add message to [`std::error::Error`]
+pub trait Message<T> {
+    /// Add message
+    ///
+    /// # Errors
+    /// If message was added successfully
+    fn message<M>(self, message: M) -> Result<T, Error>
     where
-        S: serde::Serializer,
+        M: ToString;
+}
+
+impl<T, E> Message<T> for Result<T, E>
+where
+    E: std::error::Error,
+{
+    fn message<M>(self, message: M) -> Result<T, Error>
+    where
+        M: ToString,
     {
-        serializer.serialize_str(&self.to_string())
+        self.map_err(|err| {
+            Error {
+                message: message.to_string(),
+                errors: get_errors(err),
+            }
+        })
     }
 }

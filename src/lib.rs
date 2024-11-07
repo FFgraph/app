@@ -1,4 +1,5 @@
 //! Library for `FFgraph` application where all
+#![feature(error_iter)]
 
 /// Module for command
 pub mod command;

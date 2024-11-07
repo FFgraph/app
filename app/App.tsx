@@ -8,19 +8,21 @@ import styles from "./app.module.css";
 function App() {
     const dialogRef = useRef<DialogRef>(null);
     const [errorMessage, setErrorMessage] = useState("");
+    const [errors, setErrors] = useState<string[]>([]);
 
     // listen to error message and display error message
     useEffect(() => {
-        const unListenErrorMessage = listen<string>(
-            "error-message",
-            (event) => {
-                const message = event.payload;
-                setErrorMessage(message);
-                if (dialogRef.current) {
-                    dialogRef.current.open();
-                }
-            },
-        );
+        const unListenErrorMessage = listen<{
+            message: string;
+            errors: string[];
+        }>("error-message", (event) => {
+            const payload = event.payload;
+            setErrorMessage(payload.message);
+            setErrors(payload.errors);
+            if (dialogRef.current) {
+                dialogRef.current.open();
+            }
+        });
         return () => {
             unListenErrorMessage.then((f) => f());
         };
@@ -28,7 +30,9 @@ function App() {
 
     return (
         <div className={styles.mainDiv}>
-            <Dialog ref={dialogRef}>{errorMessage}</Dialog>
+            <Dialog ref={dialogRef}>
+                {errorMessage} {errors}
+            </Dialog>
             <NodeGraph />
         </div>
     );

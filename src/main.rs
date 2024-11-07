@@ -1,11 +1,10 @@
 //! Main `FFgraph` application
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use ffgraph::error::Error;
 use ffgraph::menu::{create_menu, handle_menu_event};
 use tauri::Emitter;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -17,9 +16,9 @@ fn main() -> Result<(), Error> {
             Ok(())
         })
         .on_menu_event(|app, menu_event| {
-            // when custom menu item is clicked handle event if error raise error message
+            // when custom menu item is clicked handle error if event raise error
             if let Err(err) = handle_menu_event(app, &menu_event) {
-                app.emit("error-message", err.to_string()).ok();
+                app.emit("error-message", err).ok();
             }
         })
         .invoke_handler(tauri::generate_handler![
