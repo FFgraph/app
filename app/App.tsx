@@ -4,6 +4,7 @@ import Dialog, { type DialogRef } from "./components/Dialog";
 import NodeGraph from "./components/NodeGraph";
 
 import styles from "./app.module.css";
+import ErrorBox from "./components/ErrorBox";
 
 function App() {
     const dialogRef = useRef<DialogRef>(null);
@@ -31,7 +32,7 @@ function App() {
     return (
         <div className={styles.mainDiv}>
             <Dialog ref={dialogRef}>
-                {errorMessage} {errors}
+                <ErrorBox message={errorMessage} errors={errors} />
             </Dialog>
             <NodeGraph />
         </div>

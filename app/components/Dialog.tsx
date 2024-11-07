@@ -1,6 +1,6 @@
 import type React from "react";
 import {
-    type ForwardRefRenderFunction,
+    type ForwardedRef,
     forwardRef,
     useImperativeHandle,
     useRef,
@@ -14,10 +14,7 @@ export interface DialogRef {
 }
 
 // expose dom node to parent component with a ref.
-const Dialog: ForwardRefRenderFunction<DialogRef, DialogProps> = (
-    dialogProps,
-    ref,
-) => {
+const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
     const { children, ...props } = dialogProps;
 
     const dialogRef = useRef<HTMLDialogElement>(null);
@@ -48,4 +45,4 @@ const Dialog: ForwardRefRenderFunction<DialogRef, DialogProps> = (
     );
 };
 
-export default forwardRef<DialogRef, DialogProps>(Dialog);
+export default forwardRef(Dialog);
