@@ -46,10 +46,17 @@ fn create_app_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std::
 /// # Errors
 /// If file submenu is not created properly
 fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std::error::Error>> {
-    let open_file_menu_item = MenuItem::with_id(
+    let new_graph_menu_item = MenuItem::with_id(
         handle,
-        "open-file",
-        "Open file...",
+        "new-graph",
+        "New Graph...",
+        true,
+        Some("CmdOrCtrl+N"),
+    )?;
+    let open_graph_menu_item = MenuItem::with_id(
+        handle,
+        "open-graph",
+        "Open Graph...",
         true,
         Some("CmdOrCtrl+O"),
     )?;
@@ -62,8 +69,12 @@ fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std:
         true,
         Some("Shift+CmdOrCtrl+S"),
     )?;
+
     let file_sub_menu_builder = SubmenuBuilder::new(handle, "File")
-        .item(&open_file_menu_item)
+        .item(&new_graph_menu_item)
+        .separator()
+        .item(&open_graph_menu_item)
+        .separator()
         .item(&save_graph_menu_item)
         .item(&save_as_graph_menu_item);
 
@@ -90,8 +101,12 @@ pub fn create_menu(handle: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::error::
 /// If menu event are not handled properly
 pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) -> Result<(), Error> {
     match event.id.as_ref() {
-        "open-file" => {
-            app.emit("open-file", ())
+        "new-graph" => {
+            app.emit("new-graph", ())
+                .message("failed to emit new file event")?;
+        }
+        "open-graph" => {
+            app.emit("open-graph", ())
                 .message("failed to emit open file event")?;
         }
         "save-graph" => {
