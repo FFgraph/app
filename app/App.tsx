@@ -18,16 +18,18 @@ import {
     applyEdgeChanges,
     applyNodeChanges,
 } from "@xyflow/react";
-import styles from "./app.module.css";
 import Button from "./components/Button";
 import ErrorBox from "./components/ErrorBox";
+import classNames from "classnames";
+import * as styles from "./app.css";
 
 function flowInstanceToJSON(flowInstance: ReactFlowInstance): string {
     return JSON.stringify(flowInstance.toObject(), undefined, 4);
 }
 
 interface IdentifierInfo {
-    fileName: string;
+    displayName: string;
+    filePath?: string;
     savedFileContent?: string;
     lastKnownObject?: ReactFlowJsonObject;
 }
@@ -48,8 +50,8 @@ function App() {
 
     const changeToIndex = useCallback(
         (index: number) => {
-            const updatedIdentifiers = identifiers.map((item, index) =>
-                index === activeIdentifier
+            const updatedIdentifiers = identifiers.map((item, itemIndex) =>
+                itemIndex === activeIdentifier
                     ? { ...item, lastKnownObject: flowInstance?.toObject() }
                     : item,
             );
@@ -94,7 +96,10 @@ function App() {
         setNodes([]);
         setEdges([]);
         setActiveIdentifier(identifiers.length);
-        setIdentifiers([...identifiers, { fileName: "unknown" }]);
+        setIdentifiers([
+            ...identifiers,
+            { displayName: `unknown${identifiers.length}` },
+        ]);
     }, [identifiers]);
 
     useEffect(() => {
@@ -122,7 +127,8 @@ function App() {
                 setIdentifiers([
                     ...identifiers,
                     {
-                        fileName: file,
+                        displayName: file,
+                        filePath: file,
                         savedFileContent: fileContent,
                         lastKnownObject: flow,
                     },
@@ -140,19 +146,16 @@ function App() {
     useEffect(() => {
         // save current file to a content
         const unListenSaveGraph = listen("save-graph", async () => {
-            if (flowInstance && activeIdentifier) {
+            if (flowInstance && activeIdentifier !== null) {
                 let file: string | null;
-                const identifierFileName =
-                    identifiers[activeIdentifier].fileName;
-                if (identifierFileName !== "unknown") {
-                    file = identifierFileName;
+                const identifierFilePath =
+                    identifiers[activeIdentifier].filePath;
+                if (identifierFilePath) {
+                    file = identifierFilePath;
                 } else {
                     file = await save({
                         filters: [{ name: "JSON", extensions: ["json"] }],
                     });
-                    // update current file to file name if file is not null
-                    if (file) {
-                    }
                 }
                 if (file) {
                     const fileContent = flowInstanceToJSON(flowInstance);
@@ -163,7 +166,8 @@ function App() {
                     const updatedIdentifiers = identifiers.map((item, index) =>
                         index === activeIdentifier
                             ? {
-                                  fileName: file,
+                                  displayName: file,
+                                  filePath: file,
                                   savedFileContent: fileContent,
                               }
                             : item,
@@ -178,9 +182,10 @@ function App() {
         };
     }, [flowInstance, activeIdentifier, identifiers]);
 
+    // effect to handle save as graph
     useEffect(() => {
         const unListenSaveGraph = listen("save-as-graph", async (_event) => {
-            if (flowInstance) {
+            if (flowInstance && activeIdentifier !== null) {
                 let file: string | null;
                 file = await save({
                     filters: [{ name: "JSON", extensions: ["json"] }],
@@ -190,7 +195,8 @@ function App() {
                     const updatedIdentifiers = identifiers.map((item, index) =>
                         index === activeIdentifier
                             ? {
-                                  fileName: file,
+                                  displayName: file,
+                                  filePath: file,
                                   savedFileContent: fileContent,
                                   lastKnownObject: item.lastKnownObject,
                               }
@@ -233,29 +239,30 @@ function App() {
             <Dialog ref={dialogRef}>
                 <ErrorBox message={errorMessage} errors={errors} />
             </Dialog>
-            <div className={styles.mainDiv}>
+            <div
+                className={classNames(styles.mainDiv, {
+                    [styles.centered]: identifiers.length === 0,
+                })}
+            >
                 {identifiers.length === 0 ? (
-                    <Button
-                        className={styles.createButton}
-                        onClick={createNewGraph}
-                    >
+                    <Button onClick={createNewGraph}>
                         Create new graph...
                     </Button>
                 ) : (
                     <>
                         <div className={styles.titleDiv}>
                             {identifiers.map((identifier, index) => (
-                                <Button
-                                    className={
-                                        index === activeIdentifier
-                                            ? styles.titleItemSelected
-                                            : styles.titleItem
-                                    }
-                                    key={identifier.fileName}
+                                <div
+                                    key={identifier.displayName}
+                                    className={classNames(styles.titleItem, {
+                                        [styles.titleItemSelected]:
+                                            index === activeIdentifier,
+                                    })}
                                     onClick={() => changeToIndex(index)}
+                                    onKeyDown={() => changeToIndex(index)}
                                 >
-                                    {identifier.fileName}
-                                </Button>
+                                    <p>{identifier.displayName}</p>
+                                </div>
                             ))}
                         </div>
                         <div className={styles.nodeGraph}>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Button from "../Button";
-import styles from "./styles.module.css";
+import * as styles from "./styles.css";
 
 interface ErrorBoxProps {
     message: string;

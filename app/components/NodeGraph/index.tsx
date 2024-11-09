@@ -10,7 +10,7 @@ import {
     ReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import styles from "./styles.module.css";
+import * as styles from "./styles.css";
 
 interface NodeGraphProps<
     NodeType extends Node = Node,

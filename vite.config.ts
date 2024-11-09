@@ -1,10 +1,11 @@
+import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 import React from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
-    plugins: [React()],
+    plugins: [vanillaExtractPlugin(), React()],
     clearScreen: false,
     server: {
         port: 1420,
