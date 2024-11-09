@@ -15,7 +15,7 @@
         "node": "^22.11.0"
     },
     "scripts": {
-        "build": "tsc && vite build",
+        "build": "tsc -b && vite build",
         "check": "biome check",
         "dev": "vite",
         "preview": "vite preview",

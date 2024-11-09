@@ -1,7 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Dialog, { type DialogRef } from "./components/Dialog";
-import NodeGraph from "./components/NodeGraph";
+import Dialog, { type DialogRef } from "@components/Dialog";
+import NodeGraph from "@components/NodeGraph";
 
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -18,8 +18,8 @@ import {
     applyEdgeChanges,
     applyNodeChanges,
 } from "@xyflow/react";
-import Button from "./components/Button";
-import ErrorBox from "./components/ErrorBox";
+import Button from "@components/Button";
+import ErrorBox from "@components/ErrorBox";
 import classNames from "classnames";
 import * as styles from "./app.css";
 
