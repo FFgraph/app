@@ -5,6 +5,8 @@ export const mainDiv = style({
     width: "100vw",
     display: "flex",
     flexDirection: "column",
+    backgroundColor: "#171717",
+    color: "#ffffff",
 });
 
 export const centered = style({

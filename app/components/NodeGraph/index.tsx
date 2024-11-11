@@ -37,8 +37,8 @@ export default function NodeGraph(props: NodeGraphProps) {
                 fitView
                 proOptions={{ hideAttribution: true }}
             >
-                <Background />
-                <Controls />
+                <Background className={styles.mainBackground} />
+                <Controls className={styles.controlsButton} />
             </ReactFlow>
         </div>
     );
