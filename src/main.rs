@@ -22,7 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         })
         .invoke_handler(tauri::generate_handler![
-            ffgraph::command::save_file_content
+            ffgraph::command::save_file_content,
+            ffgraph::command::add_file_name_to_title,
         ])
         .run(tauri::generate_context!())?;
     Ok(())

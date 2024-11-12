@@ -1,45 +1,177 @@
 import {
+    addEdge,
+    applyEdgeChanges,
+    applyNodeChanges,
     Background,
+    type Connection,
     Controls,
     type Edge,
+    type EdgeChange,
+    MiniMap,
     type Node,
-    type OnConnect,
-    type OnEdgesChange,
-    type OnInit,
-    type OnNodesChange,
+    type NodeChange,
+    Panel,
     ReactFlow,
+    type ReactFlowInstance,
+    type ReactFlowJsonObject,
+    ReactFlowProvider,
+    useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import * as styles from "./styles.css";
+import { useCallback, useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
+import Button from "../Button";
 
-interface NodeGraphProps<
-    NodeType extends Node = Node,
-    EdgeType extends Edge = Edge,
-> {
-    nodes: NodeType[];
-    edges: EdgeType[];
-    onNodesChange: OnNodesChange<NodeType>;
-    onEdgesChange: OnEdgesChange<EdgeType>;
-    onConnect: OnConnect;
-    onInit: OnInit<NodeType, EdgeType>;
+function saveInstanceToFile(flowInstance: ReactFlowInstance, file: string) {
+    const fileContent = JSON.stringify(flowInstance.toObject(), undefined, 4);
+    invoke("save_file_content", {
+        filePath: file,
+        fileContent: fileContent,
+    });
 }
 
-export default function NodeGraph(props: NodeGraphProps) {
+function Flow() {
+    const [nodes, setNodes] = useState<Node[]>([]);
+    const [edges, setEdges] = useState<Edge[]>([]);
+    const [currentFile, setCurrentFile] = useState<string | null>();
+    const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
+        null,
+    );
+    const { setViewport } = useReactFlow();
+
+    // function which is called when nodes changes
+    const onNodesChange = useCallback(
+        (changes: NodeChange[]) =>
+            setNodes((nds) => applyNodeChanges(changes, nds)),
+        [],
+    );
+
+    // function which is called when edges changes
+    const onEdgesChange = useCallback(
+        (changes: EdgeChange[]) =>
+            setEdges((eds) => applyEdgeChanges(changes, eds)),
+        [],
+    );
+
+    // function which is called when two nodes get connected
+    const onConnect = useCallback(
+        (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+        [],
+    );
+
+    useEffect(() => {
+        // register a new graph listener
+        const unListenOpenFile = listen("new-graph", async () => {
+            setNodes([]);
+            setEdges([]);
+            setViewport({ x: 0, y: 0, zoom: 1 });
+            invoke("add_file_name_to_title", { fileName: null });
+        });
+        return () => {
+            unListenOpenFile.then((f) => f());
+        };
+    }, [setViewport]);
+
+    useEffect(() => {
+        // register a open graph listener
+        const unListenOpenFile = listen("open-graph", async () => {
+            const file = await open({
+                multiple: false,
+                filters: [{ name: "JSON", extensions: ["json"] }],
+            });
+            // if file present update current value
+            if (file) {
+                const fileContent = await readTextFile(file);
+                const flow: ReactFlowJsonObject = JSON.parse(fileContent);
+                setNodes(flow.nodes);
+                setEdges(flow.edges);
+                setViewport(flow.viewport);
+                setCurrentFile(file);
+                invoke("add_file_name_to_title", { fileName: file });
+            }
+        });
+
+        return () => {
+            unListenOpenFile.then((f) => f());
+        };
+    }, [setViewport]);
+
+    useEffect(() => {
+        // save current file to a content
+        const unListenSaveGraph = listen("save-graph", async () => {
+            if (flowInstance) {
+                let file: string | null;
+                if (currentFile) {
+                    file = currentFile;
+                } else {
+                    file = await save({
+                        filters: [{ name: "JSON", extensions: ["json"] }],
+                    });
+                }
+                if (file) {
+                    saveInstanceToFile(flowInstance, file);
+                }
+            }
+        });
+
+        return () => {
+            unListenSaveGraph.then((f) => f());
+        };
+    }, [flowInstance, currentFile]);
+
+    // effect to handle save as graph
+    useEffect(() => {
+        const unListenSaveGraph = listen("save-as-graph", async (_event) => {
+            if (flowInstance) {
+                let file: string | null;
+                file = await save({
+                    filters: [{ name: "JSON", extensions: ["json"] }],
+                });
+                if (file) {
+                    saveInstanceToFile(flowInstance, file);
+                    setCurrentFile(file);
+                    invoke("add_file_name_to_title", { fileName: file });
+                }
+            }
+        });
+
+        return () => {
+            unListenSaveGraph.then((f) => f());
+        };
+    }, [flowInstance]);
+
     return (
         <div className={styles.topDiv}>
             <ReactFlow
-                nodes={props.nodes}
-                edges={props.edges}
-                onNodesChange={props.onNodesChange}
-                onEdgesChange={props.onEdgesChange}
-                onConnect={props.onConnect}
-                onInit={props.onInit}
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onInit={setFlowInstance}
+                colorMode="dark"
                 fitView
                 proOptions={{ hideAttribution: true }}
             >
-                <Background className={styles.mainBackground} />
-                <Controls className={styles.controlsButton} />
+                <Background />
+                <Controls />
+                <MiniMap />
+                <Panel position="top-right">
+                    <Button>Export</Button>
+                </Panel>
             </ReactFlow>
         </div>
+    );
+}
+
+export default function NodeGraph() {
+    return (
+        <ReactFlowProvider>
+            <Flow />
+        </ReactFlowProvider>
     );
 }

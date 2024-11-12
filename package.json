@@ -22,11 +22,11 @@
         "tauri": "tauri"
     },
     "dependencies": {
-        "@tauri-apps/api": "^2.1.0",
+        "@tauri-apps/api": "^2.1.1",
         "@tauri-apps/plugin-dialog": "^2.0.1",
         "@tauri-apps/plugin-fs": "^2.0.2",
         "@vanilla-extract/css": "^1.16.0",
-        "@xyflow/react": "^12.3.4",
+        "@xyflow/react": "^12.3.5",
         "classnames": "^2.5.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1"

@@ -2,9 +2,13 @@ import { useState } from "react";
 import Button from "@components/Button";
 import * as styles from "./styles.css";
 
-interface ErrorBoxProps {
+export interface ErrorFormat {
     message: string;
     errors: string[];
+}
+
+interface ErrorBoxProps {
+    error: ErrorFormat;
 }
 
 export default function ErrorBox(props: ErrorBoxProps) {
@@ -16,9 +20,11 @@ export default function ErrorBox(props: ErrorBoxProps) {
 
     return (
         <div className={styles.topDiv}>
-            <div>{props.message}</div>
-            <Button onClick={changeHideErrors}>Errors:</Button>
-            <p hidden={hideErrors}>{props.errors.join("\n")}</p>
+            <div>{props.error.message}</div>
+            <Button className={styles.errorsButton} onClick={changeHideErrors}>
+                Errors {"\u{25BC}"}
+            </Button>
+            <p hidden={hideErrors}>{props.error.errors.join("\n")}</p>
         </div>
     );
 }
