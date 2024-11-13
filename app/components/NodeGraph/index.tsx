@@ -10,12 +10,11 @@ import {
     MiniMap,
     type Node,
     type NodeChange,
-    Panel,
     ReactFlow,
-    type ReactFlowInstance,
     type ReactFlowJsonObject,
     ReactFlowProvider,
     useReactFlow,
+    type Viewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import * as styles from "./styles.css";
@@ -24,43 +23,62 @@ import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
-import Button from "../Button";
 
-function saveInstanceToFile(flowInstance: ReactFlowInstance, file: string) {
-    const fileContent = JSON.stringify(flowInstance.toObject(), undefined, 4);
+function invokeAddFileNameToTitle(file: string | null, isFileSaved: boolean) {
+    invoke("add_file_name_to_title", {
+        fileName: file,
+        isFileSaved: isFileSaved,
+    });
+}
+
+function saveInstanceToFile(flowJsonObject: ReactFlowJsonObject, file: string) {
+    const fileContent = JSON.stringify(flowJsonObject, undefined, 4);
     invoke("save_file_content", {
         filePath: file,
         fileContent: fileContent,
     });
+    invokeAddFileNameToTitle(file, true);
 }
 
 function Flow() {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
-    const [currentFile, setCurrentFile] = useState<string | null>();
-    const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(
-        null,
-    );
-    const { setViewport } = useReactFlow();
+    const [currentFile, setCurrentFile] = useState<string | null>(null);
+    const { setViewport, toObject: identifierJsonObject } = useReactFlow();
 
     // function which is called when nodes changes
     const onNodesChange = useCallback(
-        (changes: NodeChange[]) =>
-            setNodes((nds) => applyNodeChanges(changes, nds)),
-        [],
+        (changes: NodeChange[]) => {
+            setNodes((nds) => applyNodeChanges(changes, nds));
+            invokeAddFileNameToTitle(currentFile, false);
+        },
+        [currentFile],
     );
 
     // function which is called when edges changes
     const onEdgesChange = useCallback(
-        (changes: EdgeChange[]) =>
-            setEdges((eds) => applyEdgeChanges(changes, eds)),
-        [],
+        (changes: EdgeChange[]) => {
+            setEdges((eds) => applyEdgeChanges(changes, eds));
+            invokeAddFileNameToTitle(currentFile, false);
+        },
+        [currentFile],
     );
 
     // function which is called when two nodes get connected
     const onConnect = useCallback(
-        (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-        [],
+        (params: Connection) => {
+            setEdges((eds) => addEdge(params, eds));
+            invokeAddFileNameToTitle(currentFile, false);
+        },
+        [currentFile],
+    );
+
+    // function which is called when viewport changes
+    const onViewportChange = useCallback(
+        (_viewPort: Viewport) => {
+            invokeAddFileNameToTitle(currentFile, false);
+        },
+        [currentFile],
     );
 
     useEffect(() => {
@@ -69,7 +87,7 @@ function Flow() {
             setNodes([]);
             setEdges([]);
             setViewport({ x: 0, y: 0, zoom: 1 });
-            invoke("add_file_name_to_title", { fileName: null });
+            invokeAddFileNameToTitle(null, true);
         });
         return () => {
             unListenOpenFile.then((f) => f());
@@ -91,7 +109,7 @@ function Flow() {
                 setEdges(flow.edges);
                 setViewport(flow.viewport);
                 setCurrentFile(file);
-                invoke("add_file_name_to_title", { fileName: file });
+                invokeAddFileNameToTitle(file, true);
             }
         });
 
@@ -103,46 +121,41 @@ function Flow() {
     useEffect(() => {
         // save current file to a content
         const unListenSaveGraph = listen("save-graph", async () => {
-            if (flowInstance) {
-                let file: string | null;
-                if (currentFile) {
-                    file = currentFile;
-                } else {
-                    file = await save({
-                        filters: [{ name: "JSON", extensions: ["json"] }],
-                    });
-                }
-                if (file) {
-                    saveInstanceToFile(flowInstance, file);
-                }
+            let file: string | null;
+            if (currentFile) {
+                file = currentFile;
+            } else {
+                file = await save({
+                    filters: [{ name: "JSON", extensions: ["json"] }],
+                });
+            }
+            if (file) {
+                saveInstanceToFile(identifierJsonObject(), file);
             }
         });
 
         return () => {
             unListenSaveGraph.then((f) => f());
         };
-    }, [flowInstance, currentFile]);
+    }, [identifierJsonObject, currentFile]);
 
     // effect to handle save as graph
     useEffect(() => {
         const unListenSaveGraph = listen("save-as-graph", async (_event) => {
-            if (flowInstance) {
-                let file: string | null;
-                file = await save({
-                    filters: [{ name: "JSON", extensions: ["json"] }],
-                });
-                if (file) {
-                    saveInstanceToFile(flowInstance, file);
-                    setCurrentFile(file);
-                    invoke("add_file_name_to_title", { fileName: file });
-                }
+            let file: string | null;
+            file = await save({
+                filters: [{ name: "JSON", extensions: ["json"] }],
+            });
+            if (file) {
+                saveInstanceToFile(identifierJsonObject(), file);
+                setCurrentFile(file);
             }
         });
 
         return () => {
             unListenSaveGraph.then((f) => f());
         };
-    }, [flowInstance]);
+    }, [identifierJsonObject]);
 
     return (
         <div className={styles.topDiv}>
@@ -152,7 +165,7 @@ function Flow() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
-                onInit={setFlowInstance}
+                onViewportChange={onViewportChange}
                 colorMode="dark"
                 fitView
                 proOptions={{ hideAttribution: true }}
@@ -160,9 +173,6 @@ function Flow() {
                 <Background />
                 <Controls />
                 <MiniMap />
-                <Panel position="top-right">
-                    <Button>Export</Button>
-                </Panel>
             </ReactFlow>
         </div>
     );

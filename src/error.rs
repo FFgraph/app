@@ -47,3 +47,17 @@ where
         })
     }
 }
+
+impl<T> Message<T> for Option<T> {
+    fn message<M>(self, message: M) -> Result<T, Error>
+    where
+        M: ToString,
+    {
+        self.ok_or_else(|| {
+            Error {
+                message: message.to_string(),
+                errors: vec![],
+            }
+        })
+    }
+}

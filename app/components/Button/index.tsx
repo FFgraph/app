@@ -4,10 +4,10 @@ import * as styles from "./styles.css";
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
 
 export default function Button(buttonProps: ButtonProps) {
-    const { children, className, ...props } = buttonProps;
+    const { children, className: passedClassName, ...props } = buttonProps;
     return (
         <button
-            className={classNames(styles.buttonDefaultClass, className)}
+            className={classNames(styles.buttonDefaultClass, passedClassName)}
             type="button"
             {...props}
         >
