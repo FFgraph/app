@@ -17,21 +17,21 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { invoke } from "@tauri-apps/api/core";
+import { safeInvoke } from "@/utils/invoke";
 import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
 
 function invokeAddFileNameToTitle(file: string | null, isFileSaved: boolean) {
-    invoke("add_file_name_to_title", {
+    safeInvoke("add_file_name_to_title", {
         fileName: file,
         isFileSaved: isFileSaved,
     });
 }
 
 function saveInstanceToFile(flowJsonObject: ReactFlowJsonObject, file: string) {
-    invoke("save_graph", {
+    safeInvoke("save_graph", {
         filePath: file,
         graph: flowJsonObject,
     });
@@ -103,14 +103,19 @@ function Flow() {
             });
             // if file present update current value
             if (file) {
-                const flow: ReactFlowJsonObject = await invoke("read_graph", {
-                    filePath: file,
-                });
-                setNodes(flow.nodes);
-                setEdges(flow.edges);
-                setViewport(flow.viewport);
-                setCurrentFile(file);
-                invokeAddFileNameToTitle(file, true);
+                const flow = await safeInvoke<ReactFlowJsonObject>(
+                    "read_graph",
+                    {
+                        filePath: file,
+                    },
+                );
+                if (flow) {
+                    setNodes(flow.nodes);
+                    setEdges(flow.edges);
+                    setViewport(flow.viewport);
+                    setCurrentFile(file);
+                    invokeAddFileNameToTitle(file, true);
+                }
             }
         });
 

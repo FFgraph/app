@@ -5,4 +5,8 @@ export const topDiv = style({ display: "flex", flexDirection: "column" });
 export const errorsButton = style({
     cursor: "pointer",
     backgroundColor: "transparent",
+    color: "#000000",
+    ":hover": {
+        backgroundColor: "transparent",
+    },
 });
