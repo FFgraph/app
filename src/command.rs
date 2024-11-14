@@ -1,14 +1,35 @@
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use tauri::{AppHandle, Window};
 
 use crate::error::{Error, Message};
 
-/// Save content to provided path
+/// Read graph from file and return serde json value
+///
+/// # Errors
+/// If file cannot be read
+#[tauri::command]
+pub fn read_graph(file_path: &str) -> Result<serde_json::Value, Error> {
+    let file = std::fs::read(file_path).message("failed to open path")?;
+    let decoder = GzDecoder::new(file.as_slice());
+    serde_json::from_reader(decoder).message("failed to created graph from file")
+}
+
+/// Save graph to provided path
 ///
 /// # Errors
 /// If file cannot be saved at provided path
+#[allow(
+    clippy::needless_pass_by_value,
+    reason = "serde_json::Value reference doesn't implement serialize"
+)]
 #[tauri::command]
-pub fn save_file_content(file_path: &str, file_content: &str) -> Result<(), Error> {
-    std::fs::write(file_path, file_content).message("failed to write save content to file")?;
+pub fn save_graph(file_path: &str, graph: serde_json::Value) -> Result<(), Error> {
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+    serde_json::to_writer(&mut encoder, &graph).message("failed to write graph to encoder")?;
+    let content = encoder.finish().message("failed to encode graph")?;
+    std::fs::write(file_path, content).message("failed to save graph to file")?;
     Ok(())
 }
 

@@ -1,11 +1,11 @@
-import { listen } from "@tauri-apps/api/event";
-import { useEffect, useRef, useState } from "react";
 import Dialog, { type DialogRef } from "@components/Dialog";
 import NodeGraph from "@components/NodeGraph";
+import { listen } from "@tauri-apps/api/event";
+import { useEffect, useRef, useState } from "react";
 
 import ErrorBox from "@components/ErrorBox";
-import * as styles from "./styles.css";
 import type { ErrorFormat } from "@components/ErrorBox";
+import * as styles from "./styles.css";
 
 function App() {
     const dialogRef = useRef<DialogRef>(null);

@@ -1,5 +1,5 @@
-import { useState } from "react";
 import Button from "@components/Button";
+import { useState } from "react";
 import * as styles from "./styles.css";
 
 export interface ErrorFormat {

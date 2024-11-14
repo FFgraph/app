@@ -1,7 +1,4 @@
 import {
-    addEdge,
-    applyEdgeChanges,
-    applyNodeChanges,
     Background,
     type Connection,
     Controls,
@@ -13,16 +10,18 @@ import {
     ReactFlow,
     type ReactFlowJsonObject,
     ReactFlowProvider,
-    useReactFlow,
     type Viewport,
+    addEdge,
+    applyEdgeChanges,
+    applyNodeChanges,
+    useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import * as styles from "./styles.css";
-import { useCallback, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import { invoke } from "@tauri-apps/api/core";
+import { useCallback, useEffect, useState } from "react";
+import * as styles from "./styles.css";
 
 function invokeAddFileNameToTitle(file: string | null, isFileSaved: boolean) {
     invoke("add_file_name_to_title", {
@@ -32,13 +31,14 @@ function invokeAddFileNameToTitle(file: string | null, isFileSaved: boolean) {
 }
 
 function saveInstanceToFile(flowJsonObject: ReactFlowJsonObject, file: string) {
-    const fileContent = JSON.stringify(flowJsonObject, undefined, 4);
-    invoke("save_file_content", {
+    invoke("save_graph", {
         filePath: file,
-        fileContent: fileContent,
+        graph: flowJsonObject,
     });
     invokeAddFileNameToTitle(file, true);
 }
+
+const fileFilters = [{ name: "FFgraph", extensions: ["ffgraph"] }];
 
 function Flow() {
     const [nodes, setNodes] = useState<Node[]>([]);
@@ -99,12 +99,13 @@ function Flow() {
         const unListenOpenFile = listen("open-graph", async () => {
             const file = await open({
                 multiple: false,
-                filters: [{ name: "JSON", extensions: ["json"] }],
+                filters: fileFilters,
             });
             // if file present update current value
             if (file) {
-                const fileContent = await readTextFile(file);
-                const flow: ReactFlowJsonObject = JSON.parse(fileContent);
+                const flow: ReactFlowJsonObject = await invoke("read_graph", {
+                    filePath: file,
+                });
                 setNodes(flow.nodes);
                 setEdges(flow.edges);
                 setViewport(flow.viewport);
@@ -126,7 +127,7 @@ function Flow() {
                 file = currentFile;
             } else {
                 file = await save({
-                    filters: [{ name: "JSON", extensions: ["json"] }],
+                    filters: fileFilters,
                 });
             }
             if (file) {
@@ -144,7 +145,7 @@ function Flow() {
         const unListenSaveGraph = listen("save-as-graph", async (_event) => {
             let file: string | null;
             file = await save({
-                filters: [{ name: "JSON", extensions: ["json"] }],
+                filters: fileFilters,
             });
             if (file) {
                 saveInstanceToFile(identifierJsonObject(), file);

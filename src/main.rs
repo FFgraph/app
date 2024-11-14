@@ -6,7 +6,6 @@ use tauri::Emitter;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tauri::Builder::default()
-        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let handle = app.handle();
@@ -22,7 +21,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         })
         .invoke_handler(tauri::generate_handler![
-            ffgraph::command::save_file_content,
+            ffgraph::command::read_graph,
+            ffgraph::command::save_graph,
             ffgraph::command::add_file_name_to_title,
         ])
         .run(tauri::generate_context!())?;
