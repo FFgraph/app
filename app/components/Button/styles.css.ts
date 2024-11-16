@@ -11,7 +11,4 @@ export const buttonDefaultClass = style({
     margin: 0,
     borderRadius: 4,
     border: "none",
-    ":hover": {
-        backgroundColor: "#1D4ED8",
-    },
 });

@@ -44,6 +44,7 @@ function Flow() {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [currentFile, setCurrentFile] = useState<string | null>(null);
+    const [isInitialViewport, setIsInitialViewport] = useState(false);
     const { setViewport, toObject: identifierJsonObject } = useReactFlow();
 
     // function which is called when nodes changes
@@ -76,9 +77,13 @@ function Flow() {
     // function which is called when viewport changes
     const onViewportChange = useCallback(
         (_viewPort: Viewport) => {
-            invokeAddFileNameToTitle(currentFile, false);
+            // set value same as is initial viewport and set viewport value
+            // as false since future viewport changes is not new unless new graph
+            // and open graph changes this value
+            invokeAddFileNameToTitle(currentFile, isInitialViewport);
+            setIsInitialViewport(false);
         },
-        [currentFile],
+        [currentFile, isInitialViewport],
     );
 
     useEffect(() => {
@@ -87,6 +92,7 @@ function Flow() {
             setNodes([]);
             setEdges([]);
             setViewport({ x: 0, y: 0, zoom: 1 });
+            setIsInitialViewport(true);
             invokeAddFileNameToTitle(null, true);
         });
         return () => {
@@ -114,6 +120,7 @@ function Flow() {
                     setEdges(flow.edges);
                     setViewport(flow.viewport);
                     setCurrentFile(file);
+                    setIsInitialViewport(true);
                     invokeAddFileNameToTitle(file, true);
                 }
             }

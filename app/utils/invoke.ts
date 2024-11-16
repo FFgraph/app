@@ -7,7 +7,7 @@ import { emit } from "@tauri-apps/api/event";
 
 /**
  * safe invoke alternative of tauri invoke which doesn't raise error
- * but if there is any error than it will instead return null value
+ * but if there is any error than it will instead emit error message and return null value
  */
 export async function safeInvoke<T>(
     cmd: string,

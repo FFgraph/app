@@ -6,7 +6,4 @@ export const errorsButton = style({
     cursor: "pointer",
     backgroundColor: "transparent",
     color: "#000000",
-    ":hover": {
-        backgroundColor: "transparent",
-    },
 });

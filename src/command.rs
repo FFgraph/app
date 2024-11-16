@@ -13,7 +13,7 @@ use crate::error::{Error, Message};
 pub fn read_graph(file_path: &str) -> Result<serde_json::Value, Error> {
     let file = std::fs::read(file_path).message("failed to open path")?;
     let decoder = GzDecoder::new(file.as_slice());
-    serde_json::from_reader(decoder).message("failed to created graph from file")
+    serde_json::from_reader(decoder).message("failed to create graph from file")
 }
 
 /// Save graph to provided path
