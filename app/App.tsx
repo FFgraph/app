@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
 
 import ErrorBox from "@components/ErrorBox";
-import type { ErrorFormat } from "@components/ErrorBox";
+import type { ErrorFormat } from "@/utils/error";
 import * as styles from "./styles.css";
 
 function App() {

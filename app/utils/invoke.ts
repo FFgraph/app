@@ -4,6 +4,7 @@ import {
     invoke,
 } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
+import { type ErrorFormat, errorFormat } from "./error";
 
 /**
  * safe invoke alternative of tauri invoke which doesn't raise error
@@ -18,7 +19,19 @@ export async function safeInvoke<T>(
     try {
         invokeValue = await invoke(cmd, args, options);
     } catch (err) {
-        emit("error-message", err).catch((_err) => {});
+        const result = errorFormat.safeParse(err);
+        if (result.success) {
+            emit("error-message", result.data).catch((_err) => {});
+        } else {
+            const errorMessage: ErrorFormat = {
+                message: JSON.stringify(err),
+                errors: result.error.issues.map(
+                    (zodError) =>
+                        `zod error ! ${zodError.path} (${zodError.code}) : ${zodError.message}`,
+                ),
+            };
+            emit("error-message", errorMessage).catch((_err) => {});
+        }
     }
     return invokeValue;
 }

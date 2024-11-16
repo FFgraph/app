@@ -11,4 +11,4 @@ dist-ssr
 .idea
 .DS_Store
 target
-gen/schemas
+gen

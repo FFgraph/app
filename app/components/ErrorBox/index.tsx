@@ -1,11 +1,7 @@
 import Button from "@components/Button";
 import { useState } from "react";
 import * as styles from "./styles.css";
-
-export interface ErrorFormat {
-    message: string;
-    errors: string[];
-}
+import type { ErrorFormat } from "@/utils/error";
 
 interface ErrorBoxProps {
     error: ErrorFormat;
@@ -17,14 +13,25 @@ export default function ErrorBox(props: ErrorBoxProps) {
     const changeHideErrors = () => {
         setHideErrors(!hideErrors);
     };
-
+    console.log(props.error.errors.join("\n"));
     return (
         <div className={styles.topDiv}>
             <div>{props.error.message}</div>
-            <Button className={styles.errorsButton} onClick={changeHideErrors}>
-                Errors {"\u{25BC}"}
-            </Button>
-            <p hidden={hideErrors}>{props.error.errors.join("\n")}</p>
+            {props.error.errors.length !== 0 && (
+                <>
+                    <Button
+                        className={styles.errorsButton}
+                        onClick={changeHideErrors}
+                    >
+                        Errors {"\u{25BC}"}
+                    </Button>
+                    <ul hidden={hideErrors}>
+                        {props.error.errors.map((err) => (
+                            <li key={err}>{err}</li>
+                        ))}
+                    </ul>
+                </>
+            )}
         </div>
     );
 }
