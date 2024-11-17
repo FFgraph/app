@@ -1,9 +1,11 @@
 use tauri::menu::{
     Menu, MenuBuilder, MenuEvent, MenuItem, PredefinedMenuItem, Submenu, SubmenuBuilder,
 };
-use tauri::{AppHandle, Emitter, Wry};
+use tauri::{AppHandle, Wry};
+use tauri_specta::Event;
 
 use crate::error::{Error, Message};
+use crate::event::{NewGraph, OpenGraph, SaveAsGraph, SaveGraph};
 
 /// Create app sub menu
 ///
@@ -102,19 +104,23 @@ pub fn create_menu(handle: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::error::
 pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) -> Result<(), Error> {
     match event.id.as_ref() {
         "new-graph" => {
-            app.emit("new-graph", ())
+            NewGraph
+                .emit(app)
                 .message("failed to emit new file event")?;
         }
         "open-graph" => {
-            app.emit("open-graph", ())
+            OpenGraph
+                .emit(app)
                 .message("failed to emit open file event")?;
         }
         "save-graph" => {
-            app.emit("save-graph", ())
+            SaveGraph
+                .emit(app)
                 .message("failed to emit save graph event")?;
         }
         "save-as-graph" => {
-            app.emit("save-as-graph", ())
+            SaveAsGraph
+                .emit(app)
                 .message("failed to emit save as graph event")?;
         }
         _ => {}

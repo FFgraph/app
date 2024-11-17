@@ -1,7 +1,7 @@
 import Button from "@components/Button";
+import type { ErrorFormat } from "@lib/error";
 import { useState } from "react";
 import * as styles from "./styles.css";
-import type { ErrorFormat } from "@/utils/error";
 
 interface ErrorBoxProps {
     error: ErrorFormat;

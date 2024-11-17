@@ -7,5 +7,7 @@
     "formatter": {
         "indentStyle": "space",
         "indentWidth": 4
-    }
+    },
+    "linter": { "ignore": ["app/gen/**"] },
+    "organizeImports": { "ignore": ["app/gen/**"] }
 }

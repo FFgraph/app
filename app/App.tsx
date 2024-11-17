@@ -1,27 +1,23 @@
 import Dialog, { type DialogRef } from "@components/Dialog";
 import NodeGraph from "@components/NodeGraph";
-import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
 
 import ErrorBox from "@components/ErrorBox";
-import type { ErrorFormat } from "@/utils/error";
+import { events, type Error as TauriError } from "@gen/tauri";
 import * as styles from "./styles.css";
 
 function App() {
     const dialogRef = useRef<DialogRef>(null);
-    const [error, setError] = useState<ErrorFormat | null>();
+    const [error, setError] = useState<TauriError | null>();
 
     // listen to error message and display error message
     useEffect(() => {
-        const unListenErrorMessage = listen<ErrorFormat>(
-            "error-message",
-            (event) => {
-                setError(event.payload);
-                if (dialogRef.current) {
-                    dialogRef.current.open();
-                }
-            },
-        );
+        const unListenErrorMessage = events.errorMessage.listen((event) => {
+            setError(event.payload);
+            if (dialogRef.current) {
+                dialogRef.current.open();
+            }
+        });
         return () => {
             unListenErrorMessage.then((f) => f());
         };

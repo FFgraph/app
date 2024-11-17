@@ -17,25 +17,31 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { safeInvoke } from "@/utils/invoke";
-import { listen } from "@tauri-apps/api/event";
+import { events, type JsonValue, commands } from "@gen/tauri";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
 
-function invokeAddFileNameToTitle(file: string | null, isFileSaved: boolean) {
-    safeInvoke("add_file_name_to_title", {
-        fileName: file,
-        isFileSaved: isFileSaved,
-    });
+async function invokeAddFileNameToTitle(
+    file: string | null,
+    isFileSaved: boolean,
+) {
+    const addFileResult = await commands.addFileNameToTitle(file, isFileSaved);
+    if (addFileResult.status === "error") {
+        await events.errorMessage.emit(addFileResult.error);
+    }
 }
 
-function saveInstanceToFile(flowJsonObject: ReactFlowJsonObject, file: string) {
-    safeInvoke("save_graph", {
-        filePath: file,
-        graph: flowJsonObject,
-    });
-    invokeAddFileNameToTitle(file, true);
+async function saveInstanceToFile(
+    flowJsonObject: ReactFlowJsonObject,
+    file: string,
+) {
+    const jsonValue: JsonValue = JSON.parse(JSON.stringify(flowJsonObject));
+    const saveGraphResult = await commands.saveGraph(file, jsonValue);
+    if (saveGraphResult.status === "error") {
+        await events.errorMessage.emit(saveGraphResult.error);
+    }
+    await invokeAddFileNameToTitle(file, true);
 }
 
 const fileFilters = [{ name: "FFgraph", extensions: ["ffgraph"] }];
@@ -49,38 +55,38 @@ function Flow() {
 
     // function which is called when nodes changes
     const onNodesChange = useCallback(
-        (changes: NodeChange[]) => {
+        async (changes: NodeChange[]) => {
             setNodes((nds) => applyNodeChanges(changes, nds));
-            invokeAddFileNameToTitle(currentFile, false);
+            await invokeAddFileNameToTitle(currentFile, false);
         },
         [currentFile],
     );
 
     // function which is called when edges changes
     const onEdgesChange = useCallback(
-        (changes: EdgeChange[]) => {
+        async (changes: EdgeChange[]) => {
             setEdges((eds) => applyEdgeChanges(changes, eds));
-            invokeAddFileNameToTitle(currentFile, false);
+            await invokeAddFileNameToTitle(currentFile, false);
         },
         [currentFile],
     );
 
     // function which is called when two nodes get connected
     const onConnect = useCallback(
-        (params: Connection) => {
+        async (params: Connection) => {
             setEdges((eds) => addEdge(params, eds));
-            invokeAddFileNameToTitle(currentFile, false);
+            await invokeAddFileNameToTitle(currentFile, false);
         },
         [currentFile],
     );
 
     // function which is called when viewport changes
     const onViewportChange = useCallback(
-        (_viewPort: Viewport) => {
+        async (_viewPort: Viewport) => {
             // set value same as is initial viewport and set viewport value
             // as false since future viewport changes is not new unless new graph
             // and open graph changes this value
-            invokeAddFileNameToTitle(currentFile, isInitialViewport);
+            await invokeAddFileNameToTitle(currentFile, isInitialViewport);
             setIsInitialViewport(false);
         },
         [currentFile, isInitialViewport],
@@ -88,12 +94,12 @@ function Flow() {
 
     useEffect(() => {
         // register a new graph listener
-        const unListenOpenFile = listen("new-graph", async () => {
+        const unListenOpenFile = events.newGraph.listen(async () => {
             setNodes([]);
             setEdges([]);
             setViewport({ x: 0, y: 0, zoom: 1 });
             setIsInitialViewport(true);
-            invokeAddFileNameToTitle(null, true);
+            await invokeAddFileNameToTitle(null, true);
         });
         return () => {
             unListenOpenFile.then((f) => f());
@@ -102,26 +108,27 @@ function Flow() {
 
     useEffect(() => {
         // register a open graph listener
-        const unListenOpenFile = listen("open-graph", async () => {
+        const unListenOpenFile = events.openGraph.listen(async () => {
             const file = await open({
                 multiple: false,
                 filters: fileFilters,
             });
             // if file present update current value
             if (file) {
-                const flow = await safeInvoke<ReactFlowJsonObject>(
-                    "read_graph",
-                    {
-                        filePath: file,
-                    },
-                );
+                const readGraphResult = await commands.readGraph(file);
+                let flow: ReactFlowJsonObject | null = null;
+                if (readGraphResult.status === "ok") {
+                    flow = JSON.parse(JSON.stringify(readGraphResult.data));
+                } else {
+                    await events.errorMessage.emit(readGraphResult.error);
+                }
                 if (flow) {
                     setNodes(flow.nodes);
                     setEdges(flow.edges);
                     setViewport(flow.viewport);
                     setCurrentFile(file);
                     setIsInitialViewport(true);
-                    invokeAddFileNameToTitle(file, true);
+                    await invokeAddFileNameToTitle(file, true);
                 }
             }
         });
@@ -133,7 +140,7 @@ function Flow() {
 
     useEffect(() => {
         // save current file to a content
-        const unListenSaveGraph = listen("save-graph", async () => {
+        const unListenSaveGraph = events.saveGraph.listen(async () => {
             let file: string | null;
             if (currentFile) {
                 file = currentFile;
@@ -143,7 +150,7 @@ function Flow() {
                 });
             }
             if (file) {
-                saveInstanceToFile(identifierJsonObject(), file);
+                await saveInstanceToFile(identifierJsonObject(), file);
             }
         });
 
@@ -154,13 +161,13 @@ function Flow() {
 
     // effect to handle save as graph
     useEffect(() => {
-        const unListenSaveGraph = listen("save-as-graph", async (_event) => {
+        const unListenSaveGraph = events.saveAsGraph.listen(async (_event) => {
             let file: string | null;
             file = await save({
                 filters: fileFilters,
             });
             if (file) {
-                saveInstanceToFile(identifierJsonObject(), file);
+                await saveInstanceToFile(identifierJsonObject(), file);
                 setCurrentFile(file);
             }
         });

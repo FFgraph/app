@@ -14,13 +14,15 @@ export default defineConfig(async () => ({
         host: host || false,
         hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
         watch: {
-            ignored: ["**/src/**"],
+            ignored: ["src/**", "app/gen/**"],
         },
     },
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./app"),
             "@components": path.resolve(__dirname, "./app/components"),
+            "@gen": path.resolve(__dirname, "./app/gen"),
+            "@lib": path.resolve(__dirname, "./app/lib"),
         },
     },
 }));

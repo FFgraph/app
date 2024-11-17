@@ -10,6 +10,7 @@ use crate::error::{Error, Message};
 /// # Errors
 /// If file cannot be read
 #[tauri::command]
+#[specta::specta]
 pub fn read_graph(file_path: &str) -> Result<serde_json::Value, Error> {
     let file = std::fs::read(file_path).message("failed to open path")?;
     let decoder = GzDecoder::new(file.as_slice());
@@ -25,6 +26,7 @@ pub fn read_graph(file_path: &str) -> Result<serde_json::Value, Error> {
     reason = "serde_json::Value reference doesn't implement serialize"
 )]
 #[tauri::command]
+#[specta::specta]
 pub fn save_graph(file_path: &str, graph: serde_json::Value) -> Result<(), Error> {
     let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
     serde_json::to_writer(&mut encoder, &graph).message("failed to write graph to encoder")?;
@@ -42,6 +44,7 @@ pub fn save_graph(file_path: &str, graph: serde_json::Value) -> Result<(), Error
     reason = "tauri doesn't support app handle and window as passed by reference"
 )]
 #[tauri::command]
+#[specta::specta]
 pub fn add_file_name_to_title(
     app_handle: AppHandle,
     window: Window,

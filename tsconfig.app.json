@@ -20,7 +20,9 @@
         "baseUrl": ".",
         "paths": {
             "@/*": ["./app/*"],
-            "@components/*": ["./app/components/*"]
+            "@components/*": ["./app/components/*"],
+            "@gen/*": ["./app/gen/*"],
+            "@lib/*": ["./app/lib/*"]
         }
     },
     "include": ["app"]
