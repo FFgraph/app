@@ -2,8 +2,21 @@ use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use tauri::{AppHandle, Window};
+use tauri_specta::Event;
 
 use crate::error::{Error, Message};
+use crate::event::ErrorMessage;
+
+/// Emit error message back to frontend
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "tauri doesn't support app handle as passed by reference"
+)]
+#[tauri::command]
+#[specta::specta]
+pub fn emit_error(app_handle: AppHandle, error: Error) {
+    ErrorMessage(error).emit(&app_handle).ok();
+}
 
 /// Read graph from file and return serde json value
 ///
@@ -21,7 +34,7 @@ pub fn read_graph(file_path: &str) -> Result<serde_json::Value, Error> {
 ///
 /// # Errors
 /// If file cannot be saved at provided path
-#[allow(
+#[expect(
     clippy::needless_pass_by_value,
     reason = "serde_json::Value reference doesn't implement serialize"
 )]
@@ -39,7 +52,7 @@ pub fn save_graph(file_path: &str, graph: serde_json::Value) -> Result<(), Error
 ///
 /// # Errors
 /// if file name cannot be added to title
-#[allow(
+#[expect(
     clippy::needless_pass_by_value,
     reason = "tauri doesn't support app handle and window as passed by reference"
 )]
@@ -49,7 +62,6 @@ pub fn add_file_name_to_title(
     app_handle: AppHandle,
     window: Window,
     file_name: Option<String>,
-    is_file_saved: bool,
 ) -> Result<(), Error> {
     let mut title = app_handle
         .config()
@@ -60,11 +72,7 @@ pub fn add_file_name_to_title(
         .title
         .clone();
     if let Some(file) = file_name {
-        if is_file_saved {
-            title = format!("{title} - {file}");
-        } else {
-            title = format!("{title} - {file} \u{2B24}");
-        }
+        title = format!("{title} - {file}");
     }
     if Some(title.clone()) != window.title().ok() {
         window.set_title(&title).message("failed to set title")?;

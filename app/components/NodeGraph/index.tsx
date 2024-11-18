@@ -10,7 +10,6 @@ import {
     ReactFlow,
     type ReactFlowJsonObject,
     ReactFlowProvider,
-    type Viewport,
     addEdge,
     applyEdgeChanges,
     applyNodeChanges,
@@ -22,26 +21,20 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
 
-async function invokeAddFileNameToTitle(
-    file: string | null,
-    isFileSaved: boolean,
-) {
-    const addFileResult = await commands.addFileNameToTitle(file, isFileSaved);
-    if (addFileResult.status === "error") {
-        await events.errorMessage.emit(addFileResult.error);
+async function invokeAddFileNameToTitle(file: string | null) {
+    const result = await commands.addFileNameToTitle(file);
+    if (result.status === "error") {
+        await commands.emitError(result.error);
     }
 }
 
-async function saveInstanceToFile(
-    flowJsonObject: ReactFlowJsonObject,
-    file: string,
-) {
-    const jsonValue: JsonValue = JSON.parse(JSON.stringify(flowJsonObject));
-    const saveGraphResult = await commands.saveGraph(file, jsonValue);
-    if (saveGraphResult.status === "error") {
-        await events.errorMessage.emit(saveGraphResult.error);
+async function saveInstanceToFile(flow: ReactFlowJsonObject, file: string) {
+    const jsonValue: JsonValue = JSON.parse(JSON.stringify(flow));
+    const result = await commands.saveGraph(file, jsonValue);
+    if (result.status === "error") {
+        await commands.emitError(result.error);
     }
-    await invokeAddFileNameToTitle(file, true);
+    await invokeAddFileNameToTitle(file);
 }
 
 const fileFilters = [{ name: "FFgraph", extensions: ["ffgraph"] }];
@@ -50,47 +43,22 @@ function Flow() {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [currentFile, setCurrentFile] = useState<string | null>(null);
-    const [isInitialViewport, setIsInitialViewport] = useState(false);
     const { setViewport, toObject: identifierJsonObject } = useReactFlow();
 
     // function which is called when nodes changes
-    const onNodesChange = useCallback(
-        async (changes: NodeChange[]) => {
-            setNodes((nds) => applyNodeChanges(changes, nds));
-            await invokeAddFileNameToTitle(currentFile, false);
-        },
-        [currentFile],
-    );
+    const onNodesChange = useCallback(async (changes: NodeChange[]) => {
+        setNodes((nds) => applyNodeChanges(changes, nds));
+    }, []);
 
     // function which is called when edges changes
-    const onEdgesChange = useCallback(
-        async (changes: EdgeChange[]) => {
-            setEdges((eds) => applyEdgeChanges(changes, eds));
-            await invokeAddFileNameToTitle(currentFile, false);
-        },
-        [currentFile],
-    );
+    const onEdgesChange = useCallback(async (changes: EdgeChange[]) => {
+        setEdges((eds) => applyEdgeChanges(changes, eds));
+    }, []);
 
     // function which is called when two nodes get connected
-    const onConnect = useCallback(
-        async (params: Connection) => {
-            setEdges((eds) => addEdge(params, eds));
-            await invokeAddFileNameToTitle(currentFile, false);
-        },
-        [currentFile],
-    );
-
-    // function which is called when viewport changes
-    const onViewportChange = useCallback(
-        async (_viewPort: Viewport) => {
-            // set value same as is initial viewport and set viewport value
-            // as false since future viewport changes is not new unless new graph
-            // and open graph changes this value
-            await invokeAddFileNameToTitle(currentFile, isInitialViewport);
-            setIsInitialViewport(false);
-        },
-        [currentFile, isInitialViewport],
-    );
+    const onConnect = useCallback(async (params: Connection) => {
+        setEdges((eds) => addEdge(params, eds));
+    }, []);
 
     useEffect(() => {
         // register a new graph listener
@@ -98,8 +66,7 @@ function Flow() {
             setNodes([]);
             setEdges([]);
             setViewport({ x: 0, y: 0, zoom: 1 });
-            setIsInitialViewport(true);
-            await invokeAddFileNameToTitle(null, true);
+            await invokeAddFileNameToTitle(null);
         });
         return () => {
             unListenOpenFile.then((f) => f());
@@ -120,15 +87,14 @@ function Flow() {
                 if (readGraphResult.status === "ok") {
                     flow = JSON.parse(JSON.stringify(readGraphResult.data));
                 } else {
-                    await events.errorMessage.emit(readGraphResult.error);
+                    await commands.emitError(readGraphResult.error);
                 }
                 if (flow) {
                     setNodes(flow.nodes);
                     setEdges(flow.edges);
                     setViewport(flow.viewport);
                     setCurrentFile(file);
-                    setIsInitialViewport(true);
-                    await invokeAddFileNameToTitle(file, true);
+                    await invokeAddFileNameToTitle(file);
                 }
             }
         });
@@ -185,7 +151,6 @@ function Flow() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
-                onViewportChange={onViewportChange}
                 colorMode="dark"
                 fitView
                 proOptions={{ hideAttribution: true }}

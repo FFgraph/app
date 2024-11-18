@@ -4,6 +4,12 @@
 
 export const commands = {
     /**
+     * Emit error message back to frontend
+     */
+    async emitError(error: Error): Promise<void> {
+        await TAURI_INVOKE("emit_error", { error });
+    },
+    /**
      * Read graph from file and return serde json value
      *
      * # Errors
@@ -48,14 +54,12 @@ export const commands = {
      */
     async addFileNameToTitle(
         fileName: string | null,
-        isFileSaved: boolean,
     ): Promise<Result<null, Error>> {
         try {
             return {
                 status: "ok",
                 data: await TAURI_INVOKE("add_file_name_to_title", {
                     fileName,
-                    isFileSaved,
                 }),
             };
         } catch (e) {

@@ -22,7 +22,6 @@ export default defineConfig(async () => ({
             "@": path.resolve(__dirname, "./app"),
             "@components": path.resolve(__dirname, "./app/components"),
             "@gen": path.resolve(__dirname, "./app/gen"),
-            "@lib": path.resolve(__dirname, "./app/lib"),
         },
     },
 }));
