@@ -20,8 +20,6 @@ export default defineConfig(async () => ({
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./app"),
-            "@components": path.resolve(__dirname, "./app/components"),
-            "@gen": path.resolve(__dirname, "./app/gen"),
         },
     },
 }));

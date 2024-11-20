@@ -16,7 +16,7 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { events, type JsonValue, commands } from "@gen/tauri";
+import { events, type JsonValue, commands } from "@/gen/tauri";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";

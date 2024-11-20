@@ -4,9 +4,16 @@ import {
     forwardRef,
     useImperativeHandle,
     useRef,
+    type MouseEvent,
 } from "react";
+import * as styles from "./style.css";
+import classNames from "classnames";
 
-interface DialogProps extends React.DialogHTMLAttributes<HTMLDialogElement> {}
+interface DialogProps
+    extends Omit<
+        React.DialogHTMLAttributes<HTMLDialogElement>,
+        "onMouseDown"
+    > {}
 
 export interface DialogRef {
     open: () => void;
@@ -15,9 +22,23 @@ export interface DialogRef {
 
 // expose dom node to parent component with a ref.
 const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
-    const { children, ...props } = dialogProps;
+    const { children, className, ...props } = dialogProps;
 
     const dialogRef = useRef<HTMLDialogElement>(null);
+
+    const onDialogMouseDown = (event: MouseEvent<HTMLDialogElement>) => {
+        if (dialogRef.current) {
+            const rect = dialogRef.current.getBoundingClientRect();
+            const isInDialog =
+                rect.top <= event.clientY &&
+                event.clientY <= rect.top + rect.height &&
+                rect.left <= event.clientX &&
+                event.clientX <= rect.left + rect.width;
+            if (!isInDialog) {
+                dialogRef.current.close();
+            }
+        }
+    };
 
     useImperativeHandle(
         ref,
@@ -39,7 +60,12 @@ const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
     );
 
     return (
-        <dialog ref={dialogRef} {...props}>
+        <dialog
+            ref={dialogRef}
+            className={classNames(styles.dialogMainStyle, className)}
+            {...props}
+            onMouseDown={onDialogMouseDown}
+        >
             {children}
         </dialog>
     );

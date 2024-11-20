@@ -1,10 +1,10 @@
-import Button from "@components/Button";
-import type { ErrorFormat } from "@lib/error";
+import Button from "@/components/Button";
 import { useState } from "react";
+import type { Error as TauriError } from "@/gen/tauri";
 import * as styles from "./styles.css";
 
 interface ErrorBoxProps {
-    error: ErrorFormat;
+    error: TauriError;
 }
 
 export default function ErrorBox(props: ErrorBoxProps) {
@@ -13,7 +13,7 @@ export default function ErrorBox(props: ErrorBoxProps) {
     const changeHideErrors = () => {
         setHideErrors(!hideErrors);
     };
-    console.log(props.error.errors.join("\n"));
+
     return (
         <div className={styles.topDiv}>
             <div>{props.error.message}</div>

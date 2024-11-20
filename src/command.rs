@@ -25,7 +25,7 @@ pub fn emit_error(app_handle: AppHandle, error: Error) {
 #[tauri::command]
 #[specta::specta]
 pub fn read_graph(file_path: &str) -> Result<serde_json::Value, Error> {
-    let file = std::fs::read(file_path).message("failed to open path")?;
+    let file = std::fs::read(file_path).message(format!("failed to open path {file_path}"))?;
     let decoder = GzDecoder::new(file.as_slice());
     serde_json::from_reader(decoder).message("failed to create graph from file")
 }
@@ -44,7 +44,8 @@ pub fn save_graph(file_path: &str, graph: serde_json::Value) -> Result<(), Error
     let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
     serde_json::to_writer(&mut encoder, &graph).message("failed to write graph to encoder")?;
     let content = encoder.finish().message("failed to encode graph")?;
-    std::fs::write(file_path, content).message("failed to save graph to file")?;
+    std::fs::write(file_path, content)
+        .message(format!("failed to save graph to file {file_path}"))?;
     Ok(())
 }
 

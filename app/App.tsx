@@ -1,9 +1,9 @@
-import Dialog, { type DialogRef } from "@components/Dialog";
-import NodeGraph from "@components/NodeGraph";
+import Dialog, { type DialogRef } from "@/components/Dialog";
+import NodeGraph from "@/components/NodeGraph";
 import { useEffect, useRef, useState } from "react";
 
-import ErrorBox from "@components/ErrorBox";
-import { events, type Error as TauriError } from "@gen/tauri";
+import ErrorBox from "@/components/ErrorBox";
+import { events, type Error as TauriError } from "@/gen/tauri";
 import * as styles from "./styles.css";
 
 function App() {
