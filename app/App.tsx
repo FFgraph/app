@@ -25,7 +25,7 @@ function App() {
 
     return (
         <div>
-            <Dialog ref={dialogRef}>
+            <Dialog ref={dialogRef} className={styles.errorMessageDialog}>
                 {error && <ErrorBox error={error} />}
             </Dialog>
             <div className={styles.mainDiv}>

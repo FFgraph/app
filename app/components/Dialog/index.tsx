@@ -1,13 +1,14 @@
+import Button from "@/components/Button";
+import classNames from "classnames";
 import type React from "react";
 import {
     type ForwardedRef,
+    type MouseEvent,
     forwardRef,
     useImperativeHandle,
     useRef,
-    type MouseEvent,
 } from "react";
 import * as styles from "./style.css";
-import classNames from "classnames";
 
 interface DialogProps
     extends Omit<
@@ -17,7 +18,6 @@ interface DialogProps
 
 export interface DialogRef {
     open: () => void;
-    close: () => void;
 }
 
 // expose dom node to parent component with a ref.
@@ -40,6 +40,12 @@ const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
         }
     };
 
+    const closeDialog = () => {
+        if (dialogRef.current) {
+            dialogRef.current.close();
+        }
+    };
+
     useImperativeHandle(
         ref,
         () => {
@@ -47,11 +53,6 @@ const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
                 open() {
                     if (dialogRef.current) {
                         dialogRef.current.showModal();
-                    }
-                },
-                close() {
-                    if (dialogRef.current) {
-                        dialogRef.current.close();
                     }
                 },
             };
@@ -66,7 +67,17 @@ const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
             {...props}
             onMouseDown={onDialogMouseDown}
         >
-            {children}
+            <div className={styles.dialogDiv}>
+                {dialogRef.current?.open && (
+                    <Button
+                        className={styles.buttonClass}
+                        onClick={closeDialog}
+                    >
+                        {"\u{2169}"}
+                    </Button>
+                )}
+                <div>{children}</div>
+            </div>
         </dialog>
     );
 };

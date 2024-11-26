@@ -1,6 +1,6 @@
 import Button from "@/components/Button";
-import { useState } from "react";
 import type { Error as TauriError } from "@/gen/tauri";
+import { useState } from "react";
 import * as styles from "./styles.css";
 
 interface ErrorBoxProps {

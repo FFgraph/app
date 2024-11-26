@@ -90,6 +90,7 @@ fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std:
 pub fn create_menu(handle: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::error::Error>> {
     let app_sub_menu = create_app_sub_menu(handle)?;
     let file_sub_menu = create_file_sub_menu(handle)?;
+
     let menu = MenuBuilder::new(handle)
         .item(&app_sub_menu)
         .item(&file_sub_menu)
