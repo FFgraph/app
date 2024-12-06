@@ -23,3 +23,7 @@ pub struct SaveGraph;
 /// Event for save as graph
 #[derive(Serialize, Clone, Type, Event)]
 pub struct SaveAsGraph;
+
+/// Event for close graph
+#[derive(Serialize, Clone, Type, Event)]
+pub struct CloseGraph;

@@ -1,3 +1,5 @@
+use std::ffi::OsStr;
+
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -75,10 +77,10 @@ pub fn load_options(
 
         let connection =
             Connection::open(database_file).message("failed to open connection to database")?;
-        for entry in WalkDir::new(&tempdir) {
+        for entry in WalkDir::new(&tempdir).sort_by_file_name() {
             let entry = entry.message("failed to get dir entry")?;
             let entry_path = entry.path();
-            if entry_path.extension().and_then(|ext| ext.to_str()) == Some("sql") {
+            if entry_path.extension().and_then(OsStr::to_str) == Some("sql") {
                 let sql = std::fs::read_to_string(entry_path).message("failed to read sql file")?;
                 connection
                     .execute_batch(&sql)

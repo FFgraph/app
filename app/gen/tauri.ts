@@ -97,12 +97,14 @@ export const commands = {
 /** user-defined events **/
 
 export const events = __makeEvents__<{
+    closeGraph: CloseGraph;
     errorMessage: ErrorMessage;
     newGraph: NewGraph;
     openGraph: OpenGraph;
     saveAsGraph: SaveAsGraph;
     saveGraph: SaveGraph;
 }>({
+    closeGraph: "close-graph",
     errorMessage: "error-message",
     newGraph: "new-graph",
     openGraph: "open-graph",
@@ -114,6 +116,10 @@ export const events = __makeEvents__<{
 
 /** user-defined types **/
 
+/**
+ * Event for close graph
+ */
+export type CloseGraph = null;
 /**
  * Struct representing error
  */

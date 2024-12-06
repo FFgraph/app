@@ -8,7 +8,6 @@ export default function Button(buttonProps: ButtonProps) {
     return (
         <button
             className={classNames(styles.buttonDefaultClass, passedClassName)}
-            type="button"
             {...props}
         >
             {children}

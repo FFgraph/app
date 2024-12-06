@@ -4,7 +4,7 @@
 use std::path::Path;
 use std::process::Command;
 
-use ffgraph::event::{ErrorMessage, NewGraph, OpenGraph, SaveAsGraph, SaveGraph};
+use ffgraph::event::{CloseGraph, ErrorMessage, NewGraph, OpenGraph, SaveAsGraph, SaveGraph};
 use ffgraph::menu::{create_menu, handle_menu_event};
 use tauri_specta::{collect_commands, collect_events, Event};
 
@@ -22,7 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             NewGraph,
             OpenGraph,
             SaveGraph,
-            SaveAsGraph
+            SaveAsGraph,
+            CloseGraph
         ]);
 
     // Export typescript output from specta during debug build

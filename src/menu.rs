@@ -5,7 +5,7 @@ use tauri::{AppHandle, Wry};
 use tauri_specta::Event;
 
 use crate::error::{Error, Message};
-use crate::event::{NewGraph, OpenGraph, SaveAsGraph, SaveGraph};
+use crate::event::{CloseGraph, NewGraph, OpenGraph, SaveAsGraph, SaveGraph};
 
 /// Create app sub menu
 ///
@@ -71,6 +71,13 @@ fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std:
         true,
         Some("Shift+CmdOrCtrl+S"),
     )?;
+    let close_graph_menu = MenuItem::with_id(
+        handle,
+        "close-graph",
+        "Close graph",
+        true,
+        Some("CmdOrCtrl+W"),
+    )?;
 
     let file_sub_menu_builder = SubmenuBuilder::new(handle, "File")
         .item(&new_graph_menu_item)
@@ -78,7 +85,9 @@ fn create_file_sub_menu(handle: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std:
         .item(&open_graph_menu_item)
         .separator()
         .item(&save_graph_menu_item)
-        .item(&save_as_graph_menu_item);
+        .item(&save_as_graph_menu_item)
+        .separator()
+        .item(&close_graph_menu);
 
     Ok(file_sub_menu_builder.build()?)
 }
@@ -123,6 +132,11 @@ pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) -> Result<(), Error
             SaveAsGraph
                 .emit(app)
                 .message("failed to emit save as graph event")?;
+        }
+        "close-graph" => {
+            CloseGraph
+                .emit(app)
+                .message("failed to emit close graph event")?;
         }
         _ => {}
     };

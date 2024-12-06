@@ -26,6 +26,7 @@ import { Channel } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
+import Button from "@/components/Button";
 
 async function invokeAddFileNameToTitle(file: string | null) {
     const result = await commands.addFileNameToTitle(file);
@@ -63,9 +64,9 @@ async function loadOptions(
 const fileFilters = [{ name: "FFgraph", extensions: ["ffgraph"] }];
 
 function Flow() {
-    const [identifier, setIdentifier] = useState<string>("HEAD");
-    const [nodes, setNodes] = useState<Node[]>([]);
-    const [edges, setEdges] = useState<Edge[]>([]);
+    const [identifier, setIdentifier] = useState<string | null>(null);
+    const [nodes, setNodes] = useState<Node[] | null>(null);
+    const [edges, setEdges] = useState<Edge[] | null>(null);
     const [currentFile, setCurrentFile] = useState<string | null>(null);
     const { setViewport, toObject: flowToObject } = useReactFlow();
 
@@ -101,32 +102,46 @@ function Flow() {
 
     // function which is called when nodes changes
     const onNodesChange = useCallback(async (changes: NodeChange[]) => {
-        setNodes((nds) => applyNodeChanges(changes, nds));
+        setNodes((nds) => {
+            const oldNodes = nds ? nds : [];
+            return applyNodeChanges(changes, oldNodes);
+        });
     }, []);
 
     // function which is called when edges changes
     const onEdgesChange = useCallback(async (changes: EdgeChange[]) => {
-        setEdges((eds) => applyEdgeChanges(changes, eds));
+        setEdges((eds) => {
+            const oldEdges = eds ? eds : [];
+            return applyEdgeChanges(changes, oldEdges);
+        });
     }, []);
 
     // function which is called when two nodes get connected
     const onConnect = useCallback(async (params: Connection) => {
-        setEdges((eds) => addEdge(params, eds));
+        setEdges((eds) => {
+            const oldEdges = eds ? eds : [];
+            return addEdge(params, oldEdges);
+        });
     }, []);
+
+    const createNewGraph = useCallback(async () => {
+        await loadOptions(loadOptionsChannel, "HEAD");
+        setNodes([]);
+        setEdges([]);
+        setViewport({ x: 0, y: 0, zoom: 1 });
+        setCurrentFile(null);
+        await invokeAddFileNameToTitle(null);
+    }, [loadOptionsChannel, setViewport]);
 
     useEffect(() => {
         // register a new graph listener
         const unListenOpenFile = events.newGraph.listen(async () => {
-            await loadOptions(loadOptionsChannel, "HEAD");
-            setNodes([]);
-            setEdges([]);
-            setViewport({ x: 0, y: 0, zoom: 1 });
-            await invokeAddFileNameToTitle(null);
+            await createNewGraph();
         });
         return () => {
             unListenOpenFile.then((f) => f());
         };
-    }, [setViewport, loadOptionsChannel]);
+    }, [createNewGraph]);
 
     useEffect(() => {
         // register a open graph listener
@@ -176,7 +191,7 @@ function Flow() {
                     filters: fileFilters,
                 });
             }
-            if (file) {
+            if (file && identifier) {
                 await saveInstanceToFile(flowToObject(), file, identifier);
             }
         });
@@ -193,7 +208,7 @@ function Flow() {
             file = await save({
                 filters: fileFilters,
             });
-            if (file) {
+            if (file && identifier) {
                 await saveInstanceToFile(flowToObject(), file, identifier);
                 setCurrentFile(file);
             }
@@ -204,22 +219,43 @@ function Flow() {
         };
     }, [flowToObject, identifier]);
 
+    // effect to handle close graph
+    useEffect(() => {
+        // register close graph listener
+        const unListenOpenFile = events.closeGraph.listen(async () => {
+            setIdentifier(null);
+            setNodes(null);
+            setEdges(null);
+            setCurrentFile(null);
+            await invokeAddFileNameToTitle(null);
+        });
+        return () => {
+            unListenOpenFile.then((f) => f());
+        };
+    }, []);
+
     return (
         <div className={styles.topDiv}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                colorMode="dark"
-                fitView
-                proOptions={{ hideAttribution: true }}
-            >
-                <Background />
-                <Controls />
-                <MiniMap />
-            </ReactFlow>
+            {nodes && edges ? (
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    colorMode="dark"
+                    fitView
+                    proOptions={{ hideAttribution: true }}
+                >
+                    <Background />
+                    <Controls />
+                    <MiniMap />
+                </ReactFlow>
+            ) : (
+                <div className={styles.nonGraphElementParent}>
+                    <Button onClick={createNewGraph}>Create new graph</Button>
+                </div>
+            )}
         </div>
     );
 }
