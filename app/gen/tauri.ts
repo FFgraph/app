@@ -4,6 +4,31 @@
 
 export const commands = {
     /**
+     * Load options with provided version if provided version is not present load
+     * with latest version and provide a identifier which should be used for future
+     * request
+     *
+     * # Errors
+     * If options cannot be loaded for provided tag
+     */
+    async loadOptions(
+        channel: TAURI_CHANNEL<LoadOptionsEvent>,
+        revisionName: string,
+    ): Promise<Result<null, Error>> {
+        try {
+            return {
+                status: "ok",
+                data: await TAURI_INVOKE("load_options", {
+                    channel,
+                    revisionName,
+                }),
+            };
+        } catch (e) {
+            if (e instanceof Error) throw e;
+            else return { status: "error", error: e as any };
+        }
+    },
+    /**
      * Emit error message back to frontend
      */
     async emitError(error: Error): Promise<void> {
@@ -15,7 +40,7 @@ export const commands = {
      * # Errors
      * If file cannot be read
      */
-    async readGraph(filePath: string): Promise<Result<JsonValue, Error>> {
+    async readGraph(filePath: string): Promise<Result<Graph, Error>> {
         try {
             return {
                 status: "ok",
@@ -34,7 +59,7 @@ export const commands = {
      */
     async saveGraph(
         filePath: string,
-        graph: JsonValue,
+        graph: Graph,
     ): Promise<Result<null, Error>> {
         try {
             return {
@@ -106,6 +131,10 @@ export type Error = {
  * Event to sent a error message
  */
 export type ErrorMessage = Error;
+/**
+ * Struct representing a data
+ */
+export type Graph = { identifier: string; graph: JsonValue };
 export type JsonValue =
     | null
     | boolean
@@ -113,6 +142,26 @@ export type JsonValue =
     | string
     | JsonValue[]
     | { [key in string]: JsonValue };
+/**
+ * Event for loading options
+ */
+export type LoadOptionsEvent =
+    /**
+     * Load options event have started
+     */
+    | { type: "started" }
+    /**
+     * Repository is currently cloning and performing checkout as required
+     */
+    | { type: "cloning" }
+    /**
+     * Loading data from repository to provided path
+     */
+    | { type: "loading" }
+    /**
+     * Load options event is completed
+     */
+    | { type: "completed"; identifier: string };
 /**
  * Event for new graph
  */

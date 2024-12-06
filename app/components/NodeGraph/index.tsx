@@ -16,7 +16,13 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { events, type JsonValue, commands } from "@/gen/tauri";
+import {
+    events,
+    type JsonValue,
+    type LoadOptionsEvent,
+    commands,
+} from "@/gen/tauri";
+import { Channel } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
@@ -28,22 +34,70 @@ async function invokeAddFileNameToTitle(file: string | null) {
     }
 }
 
-async function saveInstanceToFile(flow: ReactFlowJsonObject, file: string) {
+async function saveInstanceToFile(
+    flow: ReactFlowJsonObject,
+    file: string,
+    identifier: string,
+) {
     const jsonValue: JsonValue = JSON.parse(JSON.stringify(flow));
-    const result = await commands.saveGraph(file, jsonValue);
+    const result = await commands.saveGraph(file, {
+        identifier: identifier,
+        graph: jsonValue,
+    });
     if (result.status === "error") {
         await commands.emitError(result.error);
     }
     await invokeAddFileNameToTitle(file);
 }
 
+async function loadOptions(
+    channel: Channel<LoadOptionsEvent>,
+    identifier: string,
+) {
+    const result = await commands.loadOptions(channel, identifier);
+    if (result.status === "error") {
+        await commands.emitError(result.error);
+    }
+}
+
 const fileFilters = [{ name: "FFgraph", extensions: ["ffgraph"] }];
 
 function Flow() {
+    const [identifier, setIdentifier] = useState<string>("HEAD");
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [currentFile, setCurrentFile] = useState<string | null>(null);
-    const { setViewport, toObject: identifierJsonObject } = useReactFlow();
+    const { setViewport, toObject: flowToObject } = useReactFlow();
+
+    // channel which is called when loading a options
+    const loadOptionsChannel = new Channel<LoadOptionsEvent>();
+    loadOptionsChannel.onmessage = (loadOptionsEvent) => {
+        const handleEvent = (loadEvent: LoadOptionsEvent): string => {
+            let message: string;
+            switch (loadEvent.type) {
+                case "started": {
+                    message = "starting loading options";
+                    break;
+                }
+                case "cloning": {
+                    message = "cloning repository";
+                    break;
+                }
+                case "loading": {
+                    message = "loading data from repository";
+                    break;
+                }
+                case "completed": {
+                    message = `download options with identifier ${loadEvent.identifier}`;
+                    setIdentifier(loadEvent.identifier);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        handleEvent(loadOptionsEvent);
+    };
 
     // function which is called when nodes changes
     const onNodesChange = useCallback(async (changes: NodeChange[]) => {
@@ -63,6 +117,7 @@ function Flow() {
     useEffect(() => {
         // register a new graph listener
         const unListenOpenFile = events.newGraph.listen(async () => {
+            await loadOptions(loadOptionsChannel, "HEAD");
             setNodes([]);
             setEdges([]);
             setViewport({ x: 0, y: 0, zoom: 1 });
@@ -71,7 +126,7 @@ function Flow() {
         return () => {
             unListenOpenFile.then((f) => f());
         };
-    }, [setViewport]);
+    }, [setViewport, loadOptionsChannel]);
 
     useEffect(() => {
         // register a open graph listener
@@ -85,7 +140,13 @@ function Flow() {
                 const readGraphResult = await commands.readGraph(file);
                 let flow: ReactFlowJsonObject | null = null;
                 if (readGraphResult.status === "ok") {
-                    flow = JSON.parse(JSON.stringify(readGraphResult.data));
+                    flow = JSON.parse(
+                        JSON.stringify(readGraphResult.data.graph),
+                    );
+                    await loadOptions(
+                        loadOptionsChannel,
+                        readGraphResult.data.identifier,
+                    );
                 } else {
                     await commands.emitError(readGraphResult.error);
                 }
@@ -102,7 +163,7 @@ function Flow() {
         return () => {
             unListenOpenFile.then((f) => f());
         };
-    }, [setViewport]);
+    }, [setViewport, loadOptionsChannel]);
 
     useEffect(() => {
         // save current file to a content
@@ -116,14 +177,14 @@ function Flow() {
                 });
             }
             if (file) {
-                await saveInstanceToFile(identifierJsonObject(), file);
+                await saveInstanceToFile(flowToObject(), file, identifier);
             }
         });
 
         return () => {
             unListenSaveGraph.then((f) => f());
         };
-    }, [identifierJsonObject, currentFile]);
+    }, [flowToObject, currentFile, identifier]);
 
     // effect to handle save as graph
     useEffect(() => {
@@ -133,7 +194,7 @@ function Flow() {
                 filters: fileFilters,
             });
             if (file) {
-                await saveInstanceToFile(identifierJsonObject(), file);
+                await saveInstanceToFile(flowToObject(), file, identifier);
                 setCurrentFile(file);
             }
         });
@@ -141,7 +202,7 @@ function Flow() {
         return () => {
             unListenSaveGraph.then((f) => f());
         };
-    }, [identifierJsonObject]);
+    }, [flowToObject, identifier]);
 
     return (
         <div className={styles.topDiv}>

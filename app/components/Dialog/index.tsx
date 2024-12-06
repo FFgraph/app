@@ -22,7 +22,7 @@ export interface DialogRef {
 
 // expose dom node to parent component with a ref.
 const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
-    const { children, className, ...props } = dialogProps;
+    const { children, className: passedClassName, ...props } = dialogProps;
 
     const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -63,7 +63,7 @@ const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
     return (
         <dialog
             ref={dialogRef}
-            className={classNames(styles.dialogMainStyle, className)}
+            className={classNames(styles.dialogMainStyle, passedClassName)}
             {...props}
             onMouseDown={onDialogMouseDown}
         >
