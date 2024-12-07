@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Struct representing error
-#[derive(Serialize, Deserialize, Clone, specta::Type, tauri_specta::Event)]
+#[derive(Serialize, Deserialize, Clone, specta::Type)]
 pub struct Error {
     /// main error message
     message: String,

@@ -6,12 +6,14 @@ use std::process::Command;
 
 use ffgraph::event::{CloseGraph, ErrorMessage, NewGraph, OpenGraph, SaveAsGraph, SaveGraph};
 use ffgraph::menu::{create_menu, handle_menu_event};
+use ffgraph::state::ApplicationState;
+use tauri::Manager;
 use tauri_specta::{collect_commands, collect_events, Event};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let specta_builder = tauri_specta::Builder::new()
         .commands(collect_commands![
-            ffgraph::command::load_options,
+            ffgraph::command::list_global_options,
             ffgraph::command::emit_error,
             ffgraph::command::read_graph,
             ffgraph::command::save_graph,
@@ -55,6 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // set a menu for application
             let menu = create_menu(handle)?;
             app.set_menu(menu)?;
+
+            // manage application state
+            app.manage(ApplicationState::default());
             Ok(())
         })
         .on_menu_event(|app, menu_event| {

@@ -4,29 +4,10 @@
 
 export const commands = {
     /**
-     * Load options with provided version if provided version is not present load
-     * with latest version and provide a identifier which should be used for future
-     * request
-     *
-     * # Errors
-     * If options cannot be loaded for provided tag
+     * Get all list of valid global options
      */
-    async loadOptions(
-        channel: TAURI_CHANNEL<LoadOptionsEvent>,
-        revisionName: string,
-    ): Promise<Result<null, Error>> {
-        try {
-            return {
-                status: "ok",
-                data: await TAURI_INVOKE("load_options", {
-                    channel,
-                    revisionName,
-                }),
-            };
-        } catch (e) {
-            if (e instanceof Error) throw e;
-            else return { status: "error", error: e as any };
-        }
+    async listGlobalOptions(): Promise<GlobalOptions[]> {
+        return await TAURI_INVOKE("list_global_options");
     },
     /**
      * Emit error message back to frontend
@@ -138,9 +119,45 @@ export type Error = {
  */
 export type ErrorMessage = Error;
 /**
- * Struct representing a data
+ * Global options
  */
-export type Graph = { identifier: string; graph: JsonValue };
+export type GlobalOptions =
+    /**
+     * The type of the option and any additional properties specific to that
+     * type.
+     */
+
+    /**
+     * A string-type option, with an optional list of valid choices.
+     */
+    (
+        | { type: "string"; choices: string[] | null }
+        /**
+         * A boolean-type option, with properties specific to boolean behavior.
+         */
+        | {
+              type: "boolean";
+              support_no_prefix: boolean;
+              values: TrueFalseValue | null;
+          }
+    ) & {
+        /**
+         * name of option
+         */
+        name: string;
+        /**
+         * A detailed description of the option
+         */
+        description: string;
+        /**
+         * The command-line flag associated with the option
+         */
+        flag: string;
+    };
+/**
+ * Struct representing a graph
+ */
+export type Graph = { graph: JsonValue };
 export type JsonValue =
     | null
     | boolean
@@ -148,26 +165,6 @@ export type JsonValue =
     | string
     | JsonValue[]
     | { [key in string]: JsonValue };
-/**
- * Event for loading options
- */
-export type LoadOptionsEvent =
-    /**
-     * Load options event have started
-     */
-    | { type: "started" }
-    /**
-     * Repository is currently cloning and performing checkout as required
-     */
-    | { type: "cloning" }
-    /**
-     * Loading data from repository
-     */
-    | { type: "loading" }
-    /**
-     * Load options event is completed
-     */
-    | { type: "completed"; identifier: string };
 /**
  * Event for new graph
  */
@@ -184,6 +181,20 @@ export type SaveAsGraph = null;
  * Event for save graph
  */
 export type SaveGraph = null;
+/**
+ * Represents custom string values for `true` and `false` states in a boolean
+ * option.
+ */
+export type TrueFalseValue = {
+    /**
+     * The string representation of the `true` state
+     */
+    true: string;
+    /**
+     * The string representation of the `false` state
+     */
+    false: string;
+};
 
 /** tauri-specta globals **/
 

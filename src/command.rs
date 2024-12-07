@@ -1,118 +1,26 @@
-use std::ffi::OsStr;
-
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use git2::Repository;
-use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use tauri::ipc::Channel;
-use tauri::{AppHandle, Manager, Window};
+use tauri::{AppHandle, State, Window};
 use tauri_specta::Event;
-use tempfile::TempDir;
-use walkdir::WalkDir;
 
-use crate::channel::LoadOptionsEvent;
 use crate::error::{Error, Message};
 use crate::event::ErrorMessage;
+use crate::options::global::GlobalOptions;
+use crate::state::ApplicationState;
 
-/// Load options with provided version if provided version is not present load
-/// with latest version and provide a identifier which should be used for future
-/// request
-///
-/// # Errors
-/// If options cannot be loaded for provided tag
+/// Get all list of valid global options
 #[expect(
     clippy::needless_pass_by_value,
-    reason = "tauri doesn't support app handle or channel as passed by reference"
+    reason = "tauri doesn't support state as passed by reference"
 )]
 #[tauri::command]
 #[specta::specta]
-pub fn load_options(
-    app_handle: AppHandle,
-    channel: Channel<LoadOptionsEvent>,
-    revision_name: String,
-) -> Result<(), Error> {
-    // send started data through channel
-    channel
-        .send(LoadOptionsEvent::Started)
-        .message("failed to send started data through channel")?;
-
-    let mut database_folder = app_handle
-        .path()
-        .app_cache_dir()
-        .message("failed to get app cache dir")?;
-    database_folder.push("database");
-    if !database_folder.exists() {
-        std::fs::create_dir_all(&database_folder).message("failed to create database folder")?;
-    }
-
-    // if revision name file does exists do not clone since it will be based on
-    // commit so file is already present
-    if database_folder
-        .join(format!("{revision_name}.sqlite3"))
-        .exists()
-    {
-        // send a revision name through a channel
-        channel
-            .send(LoadOptionsEvent::Completed {
-                identifier: revision_name,
-            })
-            .message("failed to send completed data through channel")?;
-    } else {
-        // create temp dir
-        let tempdir = TempDir::new().message("failed to create temp dir")?;
-
-        // clone a temp dir and checkout to required tag or branch to get object id of
-        // revision name
-        channel
-            .send(LoadOptionsEvent::Cloning)
-            .message("failed to send cloning data through channel")?;
-        let repo = Repository::clone("https://github.com/ffgraph/data", &tempdir)
-            .message("failed to clone data to temp directory")?;
-        let obj = repo
-            .revparse_single(&revision_name)
-            .message("failed to get single object from revision string")?;
-        let obj_id = obj.id();
-
-        let database_file = database_folder.join(format!("{obj_id}.sqlite3"));
-
-        // if data doesn't exists than load data else provide object id directly
-        if !database_file.exists() {
-            repo.set_head_detached(obj_id)
-                .message(format!("failed to get head to {obj_id}"))?;
-            repo.checkout_tree(&obj, None)
-                .message(format!("failed to get head to {obj_id}"))?;
-
-            // start loading data to a database
-            channel
-                .send(LoadOptionsEvent::Loading)
-                .message("failed to send loading data through channel")?;
-
-            let connection =
-                Connection::open(database_file).message("failed to open connection to database")?;
-            for entry in WalkDir::new(&tempdir).sort_by_file_name() {
-                let entry = entry.message("failed to get dir entry")?;
-                let entry_path = entry.path();
-                if entry_path.extension().and_then(OsStr::to_str) == Some("sql") {
-                    let sql =
-                        std::fs::read_to_string(entry_path).message("failed to read sql file")?;
-                    connection
-                        .execute_batch(&sql)
-                        .message("failed to execute sql")?;
-                }
-            }
-        }
-
-        // send a loaded data identifier through a channel
-        channel
-            .send(LoadOptionsEvent::Completed {
-                identifier: obj.id().to_string(),
-            })
-            .message("failed to send completed data through channel")?;
-    }
-    Ok(())
+#[must_use]
+pub fn list_global_options(state: State<ApplicationState>) -> &Vec<GlobalOptions> {
+    state.inner().global_options_vec()
 }
 
 /// Emit error message back to frontend
@@ -126,11 +34,10 @@ pub fn emit_error(app_handle: AppHandle, error: Error) {
     ErrorMessage(error).emit(&app_handle).ok();
 }
 
-/// Struct representing a data
+/// Struct representing a graph
 #[derive(Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Graph {
-    identifier: String,
     graph: serde_json::Value,
 }
 
