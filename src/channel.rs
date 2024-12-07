@@ -9,7 +9,7 @@ pub enum LoadOptionsEvent {
     Started,
     /// Repository is currently cloning and performing checkout as required
     Cloning,
-    /// Loading data from repository to provided path
+    /// Loading data from repository
     Loading,
     /// Load options event is completed
     Completed {

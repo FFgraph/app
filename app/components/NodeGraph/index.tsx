@@ -16,6 +16,7 @@ import {
     useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import Button from "@/components/Button";
 import {
     events,
     type JsonValue,
@@ -26,7 +27,6 @@ import { Channel } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
-import Button from "@/components/Button";
 
 async function invokeAddFileNameToTitle(file: string | null) {
     const result = await commands.addFileNameToTitle(file);
@@ -77,19 +77,19 @@ function Flow() {
             let message: string;
             switch (loadEvent.type) {
                 case "started": {
-                    message = "starting loading options";
+                    message = "Starting to load options";
                     break;
                 }
                 case "cloning": {
-                    message = "cloning repository";
+                    message = "Cloning the repository";
                     break;
                 }
                 case "loading": {
-                    message = "loading data from repository";
+                    message = "Loading data from the repository";
                     break;
                 }
                 case "completed": {
-                    message = `download options with identifier ${loadEvent.identifier}`;
+                    message = `Successfully downloaded options with identifier: ${loadEvent.identifier}`;
                     setIdentifier(loadEvent.identifier);
                     break;
                 }

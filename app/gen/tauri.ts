@@ -161,7 +161,7 @@ export type LoadOptionsEvent =
      */
     | { type: "cloning" }
     /**
-     * Loading data from repository to provided path
+     * Loading data from repository
      */
     | { type: "loading" }
     /**
