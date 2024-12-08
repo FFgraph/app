@@ -143,10 +143,4 @@ impl GlobalOptions {
             },
         ]
     }
-
-    /// Get name of options
-    #[must_use]
-    pub(crate) fn name(&self) -> &str {
-        &self.name
-    }
 }

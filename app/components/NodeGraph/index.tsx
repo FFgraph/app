@@ -23,8 +23,8 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
 
-async function invokeAddFileNameToTitle(file: string | null) {
-    const result = await commands.addFileNameToTitle(file);
+async function clearTitle() {
+    const result = await commands.clearTitle();
     if (result.status === "error") {
         await commands.emitError(result.error);
     }
@@ -38,7 +38,6 @@ async function saveInstanceToFile(flow: ReactFlowJsonObject, file: string) {
     if (result.status === "error") {
         await commands.emitError(result.error);
     }
-    await invokeAddFileNameToTitle(file);
 }
 
 const fileFilters = [{ name: "FFgraph", extensions: ["ffgraph"] }];
@@ -89,7 +88,7 @@ function Flow() {
         setEdges([]);
         setViewport({ x: 0, y: 0, zoom: 1 });
         setCurrentFile(null);
-        await invokeAddFileNameToTitle(null);
+        await clearTitle();
     }, [setViewport]);
 
     useEffect(() => {
@@ -125,7 +124,6 @@ function Flow() {
                     setEdges(flow.edges);
                     setViewport(flow.viewport);
                     setCurrentFile(file);
-                    await invokeAddFileNameToTitle(file);
                 }
             }
         });
@@ -181,7 +179,7 @@ function Flow() {
             setNodes(null);
             setEdges(null);
             setCurrentFile(null);
-            await invokeAddFileNameToTitle(null);
+            await clearTitle();
         });
         return () => {
             unListenOpenFile.then((f) => f());

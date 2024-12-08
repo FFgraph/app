@@ -10,6 +10,9 @@ pub mod error;
 /// Module for event
 pub mod event;
 
+/// Module for graph
+pub mod graph;
+
 /// Module for menu
 pub mod menu;
 

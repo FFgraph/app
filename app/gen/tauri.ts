@@ -16,6 +16,20 @@ export const commands = {
         await TAURI_INVOKE("emit_error", { error });
     },
     /**
+     * Set title for window to provided file name
+     *
+     * # Errors
+     * if file name cannot be added to title
+     */
+    async clearTitle(): Promise<Result<null, Error>> {
+        try {
+            return { status: "ok", data: await TAURI_INVOKE("clear_title") };
+        } catch (e) {
+            if (e instanceof Error) throw e;
+            else return { status: "error", error: e as any };
+        }
+    },
+    /**
      * Read graph from file and return serde json value
      *
      * # Errors
@@ -46,27 +60,6 @@ export const commands = {
             return {
                 status: "ok",
                 data: await TAURI_INVOKE("save_graph", { filePath, graph }),
-            };
-        } catch (e) {
-            if (e instanceof Error) throw e;
-            else return { status: "error", error: e as any };
-        }
-    },
-    /**
-     * Set title for window to provided file name
-     *
-     * # Errors
-     * if file name cannot be added to title
-     */
-    async addFileNameToTitle(
-        fileName: string | null,
-    ): Promise<Result<null, Error>> {
-        try {
-            return {
-                status: "ok",
-                data: await TAURI_INVOKE("add_file_name_to_title", {
-                    fileName,
-                }),
             };
         } catch (e) {
             if (e instanceof Error) throw e;
