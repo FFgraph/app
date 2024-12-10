@@ -1,16 +1,24 @@
 import { style } from "@vanilla-extract/css";
 
+export const dialogMainStyle = style({
+    padding: 8,
+});
+
 export const dialogDiv = style({
     display: "flex",
     flexDirection: "column",
 });
 
-export const dialogMainStyle = style({
-    padding: 0,
-    flex: 1,
+export const titleDiv = style({
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
 });
 
+export const title = style({ marginLeft: 8 });
 export const buttonClass = style({
-    alignSelf: "flex-end",
+    width: "fit-content",
+    height: "fit-content",
+    alignSelf: "center",
     cursor: "pointer",
 });

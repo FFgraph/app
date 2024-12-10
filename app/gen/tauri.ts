@@ -16,14 +16,14 @@ export const commands = {
         await TAURI_INVOKE("emit_error", { error });
     },
     /**
-     * Set title for window to provided file name
+     * Reset title to original name
      *
      * # Errors
      * if file name cannot be added to title
      */
-    async clearTitle(): Promise<Result<null, Error>> {
+    async resetTitle(): Promise<Result<null, Error>> {
         try {
-            return { status: "ok", data: await TAURI_INVOKE("clear_title") };
+            return { status: "ok", data: await TAURI_INVOKE("reset_title") };
         } catch (e) {
             if (e instanceof Error) throw e;
             else return { status: "error", error: e as any };

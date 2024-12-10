@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .commands(collect_commands![
             ffgraph::command::list_global_options,
             ffgraph::command::emit_error,
-            ffgraph::command::clear_title,
+            ffgraph::command::reset_title,
             ffgraph::command::read_graph,
             ffgraph::command::save_graph,
         ])

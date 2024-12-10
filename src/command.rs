@@ -33,7 +33,7 @@ pub fn emit_error(app_handle: AppHandle, error: Error) {
     ErrorMessage(error).emit(&app_handle).ok();
 }
 
-/// Set title for window to provided file name
+/// Reset title to original name
 ///
 /// # Errors
 /// if file name cannot be added to title
@@ -43,7 +43,7 @@ pub fn emit_error(app_handle: AppHandle, error: Error) {
 )]
 #[tauri::command]
 #[specta::specta]
-pub fn clear_title(app_handle: AppHandle, window: Window) -> Result<(), Error> {
+pub fn reset_title(app_handle: AppHandle, window: Window) -> Result<(), Error> {
     set_file_name_to_title(&app_handle, &window, None)?;
     Ok(())
 }

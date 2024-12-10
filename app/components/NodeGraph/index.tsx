@@ -23,8 +23,8 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
 import * as styles from "./styles.css";
 
-async function clearTitle() {
-    const result = await commands.clearTitle();
+async function resetTitle() {
+    const result = await commands.resetTitle();
     if (result.status === "error") {
         await commands.emitError(result.error);
     }
@@ -77,18 +77,11 @@ function Flow() {
     }, []);
 
     const createNewGraph = useCallback(async () => {
-        setNodes([
-            {
-                id: "global-node",
-                type: "globalOptions",
-                position: { x: 0, y: 0 },
-                data: {},
-            },
-        ]);
+        setNodes([]);
         setEdges([]);
         setViewport({ x: 0, y: 0, zoom: 1 });
         setCurrentFile(null);
-        await clearTitle();
+        await resetTitle();
     }, [setViewport]);
 
     useEffect(() => {
@@ -179,7 +172,7 @@ function Flow() {
             setNodes(null);
             setEdges(null);
             setCurrentFile(null);
-            await clearTitle();
+            await resetTitle();
         });
         return () => {
             unListenOpenFile.then((f) => f());

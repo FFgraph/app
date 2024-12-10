@@ -6,6 +6,14 @@ export const mainDiv = style({
     background: "#212121",
 });
 
-export const errorMessageDialog = style({
-    border: "4px solid #DD1100",
+export const errorDiv = style({
+    display: "flex",
+    flexDirection: "column",
+    padding: 16,
+});
+
+export const errorsButton = style({
+    cursor: "pointer",
+    backgroundColor: "transparent",
+    color: "#000000",
 });

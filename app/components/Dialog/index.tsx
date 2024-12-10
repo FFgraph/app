@@ -11,10 +11,9 @@ import {
 import * as styles from "./style.css";
 
 interface DialogProps
-    extends Omit<
-        React.DialogHTMLAttributes<HTMLDialogElement>,
-        "onMouseDown"
-    > {}
+    extends Omit<React.DialogHTMLAttributes<HTMLDialogElement>, "onMouseDown"> {
+    title: string;
+}
 
 export interface DialogRef {
     open: () => void;
@@ -22,7 +21,12 @@ export interface DialogRef {
 
 // expose dom node to parent component with a ref.
 const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
-    const { children, className: passedClassName, ...props } = dialogProps;
+    const {
+        children,
+        title,
+        className: passedClassName,
+        ...props
+    } = dialogProps;
 
     const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -68,14 +72,15 @@ const Dialog = (dialogProps: DialogProps, ref: ForwardedRef<DialogRef>) => {
             onMouseDown={onDialogMouseDown}
         >
             <div className={styles.dialogDiv}>
-                {dialogRef.current?.open && (
+                <div className={styles.titleDiv}>
+                    <p className={styles.title}>{title}</p>
                     <Button
                         className={styles.buttonClass}
                         onClick={closeDialog}
                     >
                         {"\u{2169}"}
                     </Button>
-                )}
+                </div>
                 <div>{children}</div>
             </div>
         </dialog>
